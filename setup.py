@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from torch.utils.cpp_extension import CUDAExtension, BuildExtension, include_paths, library_paths
 
 setup(
-    name="infonce_cuda",
+    name="cublaze",
     version="0.1",
     packages=find_packages(),
     description="Un pacchetto CUDA che implementa InfoNCE Loss per contrastive learning (SimCLR, etc.)",
@@ -16,10 +16,10 @@ setup(
     python_requires=">=3.8",  # Versione minima di Python
     ext_modules=[
         CUDAExtension(
-            name='infonce_cuda.infonce_cuda',  # Nome aggiornato per InfoNCE
+            name='cublaze.infonce_cuda',  # Nome aggiornato per InfoNCE
             sources=[
-                'infonce_cuda/cuda/infonce_cuda.cu',
-                'infonce_cuda/cuda/infonce_cuda_wrapp.cpp'
+                'cublaze/cuda/infonce_cuda.cu',
+                'cublaze/cuda/infonce_cuda_wrapp.cpp'
             ],  # File CUDA aggiornati
             # include_dirs=include_paths(),
             library_dirs=library_paths(),  # Include le librerie di PyTorch
@@ -31,7 +31,7 @@ setup(
         )
     ],
     package_data={
-        "infonce_cuda": ["*.so"],  # Include tutti i .so nella cartella infonce_cuda
+        "cublaze": ["*.so"],  # Include tutti i .so nella cartella cublaze
     },
     cmdclass={
         'build_ext': BuildExtension

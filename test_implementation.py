@@ -6,7 +6,7 @@ Replica esattamente il codice Python fornito e confronta i risultati
 
 import torch
 import torch.nn.functional as F
-from infonce_cuda.infonce_cuda_module import InfoNCELoss, info_nce_loss
+from cublaze.infonce import InfoNCELoss, info_nce_loss
 
 def info_nce_loss_reference(features, temperature=0.5):
     """

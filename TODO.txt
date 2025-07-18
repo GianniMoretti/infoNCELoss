@@ -5,6 +5,5 @@ ________________________________________________________________________________
 - Migliorare le performance guardando a tutte le possibili migliorie, tiling? accessi in memoria, 
     variabili di grandezza dei grid e kernel
 - Creare il report usando il tamplate per il prof.
-- Cambia il nome al modulo
-- Riguarda tutti i commenti e traduci in inglese
+- Riguarda tutti i commenti e traduci in inglese.
 - Una volta cambiato tutto aggiorna i vari report README etc.

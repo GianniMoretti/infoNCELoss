@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Function
-import infonce_cuda.infonce_cuda as infonce_cuda
+import cublaze.infonce_cuda as infonce_cuda
 
 class InfoNCEFunction(Function):
     """
@@ -98,6 +98,24 @@ def infonce_loss_cuda_no_grad(features, temperature=0.5):
     """
     Calcola InfoNCE Loss senza supporto per autograd (per test/confronti)
     """
-    with torch.no_grad():
-        loss = infonce_cuda.infonce_forward(features, temperature)
-        return loss
+    # Implementazione diretta senza autograd
+    device = features.device
+    batch_size = features.shape[0] // 2
+
+    # Compute similarity matrix (dot product)
+    similarity_matrix = torch.matmul(features, features.T)  # (2B, 2B)
+
+    # Remove self-similarity by masking the diagonal
+    mask = torch.eye(2 * batch_size, dtype=torch.bool, device=device)
+    similarity_matrix = similarity_matrix.masked_fill(mask, float('-inf'))
+
+    # Labels: positive pair for i is at (i + B) % (2B)
+    labels = torch.arange(batch_size, device=device)
+    labels = torch.cat([labels + batch_size, labels])
+
+    # Scale similarities by temperature
+    similarity_matrix /= temperature
+
+    # Apply cross entropy loss
+    loss = F.cross_entropy(similarity_matrix, labels)
+    return loss
