@@ -1,12 +1,10 @@
 TODO:
 ___________________________________________________________________________________________
 
-- Fare un git
-- Fare Push
 - Controllare le performance
-- Migliorare le performance guardando a tutte le possibili migliorie, tiling? accessi in memoria, variabili di grandezza dei grid e kernel
-- Creare una documentazione nel readme
+- Migliorare le performance guardando a tutte le possibili migliorie, tiling? accessi in memoria, 
+    variabili di grandezza dei grid e kernel
 - Creare il report usando il tamplate per il prof.
 - Cambia il nome al modulo
 - Riguarda tutti i commenti e traduci in inglese
-_ Una volta cambiato tutto aggiorna i vari report README etc.
+- Una volta cambiato tutto aggiorna i vari report README etc.
