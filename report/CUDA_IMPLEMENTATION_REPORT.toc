@@ -1,0 +1,55 @@
+\contentsline {section}{\numberline {1}Introduzione}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Obiettivi dell'Implementazione}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Architettura dell'Implementazione}{2}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Analisi Dettagliata dei Kernel CUDA}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Kernel per la Matrice di Similarità}{2}{subsection.2.1}%
+\contentsline {subsubsection}{\numberline {2.1.1}Analisi Tecnica}{3}{subsubsection.2.1.1}%
+\contentsline {paragraph}{Organizzazione dei Thread:}{3}{section*.2}%
+\contentsline {paragraph}{Accesso alla Memoria:}{3}{section*.3}%
+\contentsline {paragraph}{Complessità Computazionale:}{3}{section*.4}%
+\contentsline {subsection}{\numberline {2.2}Kernel per Loss e Gradienti Logits}{3}{subsection.2.2}%
+\contentsline {subsubsection}{\numberline {2.2.1}Analisi Tecnica}{4}{subsubsection.2.2.1}%
+\contentsline {paragraph}{Stabilità Numerica:}{4}{section*.5}%
+\contentsline {paragraph}{Parallelizzazione:}{4}{section*.6}%
+\contentsline {paragraph}{Calcolo dei Gradienti:}{4}{section*.7}%
+\contentsline {subsection}{\numberline {2.3}Kernel per Gradienti delle Features}{4}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}Derivazione Matematica}{5}{subsubsection.2.3.1}%
+\contentsline {paragraph}{Parallelizzazione 2D:}{5}{section*.8}%
+\contentsline {section}{\numberline {3}Funzioni di Interfaccia C++}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Funzione Forward}{5}{subsection.3.1}%
+\contentsline {subsubsection}{\numberline {3.1.1}Gestione della Memoria}{6}{subsubsection.3.1.1}%
+\contentsline {paragraph}{Tensor Management:}{6}{section*.9}%
+\contentsline {paragraph}{Labels Configuration:}{6}{section*.10}%
+\contentsline {subsection}{\numberline {3.2}Funzione Backward}{6}{subsection.3.2}%
+\contentsline {section}{\numberline {4}Ottimizzazioni e Considerazioni delle Prestazioni}{7}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Ottimizzazioni Implementate}{7}{subsection.4.1}%
+\contentsline {paragraph}{Memory Coalescing:}{7}{section*.11}%
+\contentsline {paragraph}{Occupancy:}{7}{section*.12}%
+\contentsline {subsection}{\numberline {4.2}Analisi delle Prestazioni}{7}{subsection.4.2}%
+\contentsline {paragraph}{Risultati dei Benchmark:}{7}{section*.13}%
+\contentsline {paragraph}{Bottleneck Analysis:}{7}{section*.14}%
+\contentsline {section}{\numberline {5}Integrazione con PyTorch}{7}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Autograd Function}{7}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Module Interface}{8}{subsection.5.2}%
+\contentsline {section}{\numberline {6}Validazione e Testing}{8}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Test di Correttezza}{8}{subsection.6.1}%
+\contentsline {paragraph}{Metodologia:}{8}{section*.15}%
+\contentsline {paragraph}{Risultati:}{8}{section*.16}%
+\contentsline {subsection}{\numberline {6.2}Analisi degli Errori Numerici}{8}{subsection.6.2}%
+\contentsline {paragraph}{Fonti di Errore:}{8}{section*.17}%
+\contentsline {paragraph}{Mitigazioni:}{8}{section*.18}%
+\contentsline {section}{\numberline {7}Confronto con Implementazioni Alternative}{9}{section.7}%
+\contentsline {subsection}{\numberline {7.1}PyTorch Built-in}{9}{subsection.7.1}%
+\contentsline {paragraph}{Vantaggi dell'implementazione CUDA:}{9}{section*.19}%
+\contentsline {paragraph}{Svantaggi:}{9}{section*.20}%
+\contentsline {subsection}{\numberline {7.2}Altre Implementazioni Contrastive}{9}{subsection.7.2}%
+\contentsline {section}{\numberline {8}Conclusioni e Sviluppi Futuri}{9}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Risultati Ottenuti}{9}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Possibili Miglioramenti}{9}{subsection.8.2}%
+\contentsline {paragraph}{Ottimizzazioni Avanzate:}{9}{section*.21}%
+\contentsline {paragraph}{Funzionalità Aggiuntive:}{10}{section*.22}%
+\contentsline {subsection}{\numberline {8.3}Applicazioni Pratiche}{10}{subsection.8.3}%
+\contentsline {section}{\numberline {9}Appendici}{10}{section.9}%
+\contentsline {subsection}{\numberline {9.1}Appendice A: Configurazioni CUDA Ottimali}{10}{subsection.9.1}%
+\contentsline {subsection}{\numberline {9.2}Appendice B: Profiling delle Prestazioni}{10}{subsection.9.2}%
+\contentsline {subsection}{\numberline {9.3}Appendice C: Codice Completo}{10}{subsection.9.3}%
