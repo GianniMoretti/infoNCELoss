@@ -1,10 +1,8 @@
 TODO:
 ___________________________________________________________________________________________
-
-- Migliorare le performance guardando a tutte le possibili migliorie, tiling? accessi in memoria, 
-    variabili di grandezza dei grid e kernel  !!!
-
+- Capire come calcola il softmax e il gradiente
+- Migliorare le performance del backward
+- Migliorare gli accessi in memoria in modo di averli coalesh
 
 - Una volta cambiato tutto aggiorna i vari report README etc.
 - Creare il report usando il tamplate per il prof.
-
