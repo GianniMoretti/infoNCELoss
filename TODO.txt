@@ -1,8 +1,0 @@
-TODO:
-___________________________________________________________________________________________
-- Capire come calcola il softmax e il gradiente
-- Migliorare le performance del backward
-- Migliorare gli accessi in memoria in modo di averli coalesh
-
-- Una volta cambiato tutto aggiorna i vari report README etc.
-- Creare il report usando il tamplate per il prof.

@@ -1,10 +1,10 @@
-# InfoNCE Loss CUDA Implementation
+# CuBlaze: InfoNCE Loss CUDA Implementation
 
-High-performance CUDA implementation of **InfoNCE Loss** (Information Noise-Contrastive Estimation) for self-supervised contrastive learning. This implementation supports complete batch processing with native PyTorch autograd integration.
+**CuBlaze** è un'implementazione CUDA di **InfoNCE Loss** (Information Noise-Contrastive Estimation) per self-supervised contrastive learning. Questa implementazione offre elaborazione batch completa con integrazione nativa di PyTorch autograd e supporto per multiple implementazioni ottimizzate.
 
 ## What is InfoNCE Loss?
 
-InfoNCE Loss is a fundamental loss function in contrastive learning that maximizes agreement between positive pairs of examples and minimizes agreement with negative examples. The mathematical formula is:
+InfoNCE Loss è una funzione di perdita fondamentale nel contrastive learning che massimizza l'accordo tra coppie positive di esempi e minimizza l'accordo con esempi negativi. La formula matematica è:
 
 ```
 InfoNCE = -1/N Σᵢ log(exp(sim(zᵢ, z_p(i))/τ) / Σⱼ exp(sim(zᵢ, zⱼ)/τ))
@@ -19,36 +19,40 @@ Dove:
 
 ## Implementation Features
 
-✅ **Complete Batch Processing**: Processes feature matrices (2*batch_size, feature_dim)  
-✅ **Native Autograd**: Complete integration with PyTorch backward pass  
-✅ **Numerical Stability**: Numerically stable calculations even with low temperatures  
-✅ **GPU Optimized**: Custom CUDA kernels for maximum performance  
-✅ **SimCLR Compatibility**: Specific design for contrastive learning frameworks  
+✅ **Dual Implementation**: Supporta sia kernels CUDA custom che operazioni CUBLAS ottimizzate  
+✅ **Complete Batch Processing**: Elabora matrici di feature (2*batch_size, feature_dim)  
+✅ **Native Autograd**: Integrazione completa con backward pass di PyTorch  
+✅ **Numerical Stability**: Calcoli numericamente stabili anche con temperature basse  
+✅ **GPU Optimized**: Kernels CUDA personalizzati
+✅ **SimCLR Compatibility**: Design specifico per framework di contrastive learning  
+✅ **Flexible Backend**: Scegli tra implementazione custom CUDA o CUBLAS  
 
 ## Project Structure
 
 ```
-InfoNCEloss_cuda/
-├── infonce_cuda/
-│   ├── __init__.py                    # Main exports
-│   ├── infonce_cuda_module.py        # Python/autograd implementation
+CuBlaze/
+├── cublaze/
+│   ├── __init__.py                   # Export principali
+│   ├── infonce.py                    # Implementazione Python/autograd
 │   └── cuda/
-│       ├── infonce_cuda.cu           # Optimized CUDA kernels
-│       └── infonce_cuda_wrapp.cpp    # PyBind11 wrapper
-├── setup.py                          # Build configuration
-├── build_and_test.sh                 # Automatic build+test script
-├── test_implementation.py            # Correctness and performance tests
-├── report/
-│   ├── CUDA_IMPLEMENTATION_REPORT.pdf # Complete technical documentation
-│   └── infoNCE.pdf                   # Mathematical derivation
-└── README.md                         # This documentation
+│       ├── infonce_cuda.cu           # Kernels CUDA ottimizzati
+│       └── infonce_cuda_wrapp.cpp    # Wrapper PyBind11
+├── setup.py                         # Configurazione build
+├── pyproject.toml                   # Configurazione packaging moderno
+├── build_and_test.sh               # Script automatico build+test
+├── test_implementation.py          # Test correttezza e performance
+├── performance.py                  # Analisi benchmark avanzata
+├── reports/                        # Documentazione tecnica completa
+├── documentation/                  # Documentazione LaTeX
+├── images/                        # Grafici e visualizzazioni
+└── README.md                      # Questa documentazione
 ```
 
 ## Installation
 
 ### Prerequisites
 - **Python** >= 3.8
-- **PyTorch** >= 1.7.0 with CUDA support
+- **PyTorch** >= 1.0.0 with CUDA support
 - **CUDA Toolkit** >= 11.0
 - **Compatible C++ compiler** (g++ >= 7)
 
@@ -57,7 +61,7 @@ InfoNCEloss_cuda/
 ```bash
 # Clone the repository
 git clone <repository_url>
-cd InfoNCEloss_cuda/
+cd CuBlaze/
 
 # Run automatic build and tests
 chmod +x build_and_test.sh
@@ -70,11 +74,24 @@ chmod +x build_and_test.sh
 # Clean previous builds
 rm -rf build/ *.so
 
-# Build CUDA extension
+# Build CUDA extension using setuptools
 python setup.py build_ext --inplace
+
+# Alternative: modern pip build
+pip install -e .
 
 # Test functionality
 python test_implementation.py
+```
+
+### Package Installation
+
+```bash
+# Install as package (recommended for production)
+pip install .
+
+# Install in development mode
+pip install -e .
 ```
 
 ## Usage
@@ -84,7 +101,7 @@ python test_implementation.py
 ```python
 import torch
 import torch.nn.functional as F
-from infonce_cuda.infonce_cuda_module import InfoNCELoss, info_nce_loss
+from cublaze import InfoNCELoss, InfoNCEFunction
 
 # Prepare features for contrastive learning
 batch_size = 64
@@ -96,70 +113,31 @@ raw_features = torch.randn(2 * batch_size, feature_dim).cuda()
 # IMPORTANT: L2 normalize the features
 features = F.normalize(raw_features, dim=1)
 
-# Method 1: Modular class
-loss_fn = InfoNCELoss(temperature=0.5)
+# Method 1: Using CUDA custom kernels (default, fastest)
+loss_fn = InfoNCELoss(temperature=0.5, use_cublas=False)
 loss = loss_fn(features)
 
-# Method 2: Direct function
-loss = info_nce_loss(features, temperature=0.5)
+# Method 2: Using CUBLAS optimized operations  
+loss_fn_cublas = InfoNCELoss(temperature=0.5, use_cublas=True)
+loss_cublas = loss_fn_cublas(features)
+
+# Method 3: Direct function call (for advanced users)
+loss_direct = InfoNCEFunction.apply(features, 0.5, False)  # (features, temperature, use_cublas)
 
 # Calculate gradients
 loss.backward()
 ```
 
-### Complete SimCLR Integration
+### Backend Selection Guide
 
-```python
-import torch.nn as nn
+**Custom CUDA Kernels** (`use_cublas=False`, default):
+- ✅ Più veloce per batch grandi
+- ✅ Controllo completo su ottimizzazioni
 
-class SimCLRModel(nn.Module):
-    def __init__(self, base_encoder, projection_dim=128, temperature=0.5):
-        super().__init__()
-        self.encoder = base_encoder
-        
-        # Projection head (standard SimCLR)
-        self.projector = nn.Sequential(
-            nn.Linear(base_encoder.fc.in_features, 512),
-            nn.ReLU(),
-            nn.Linear(512, projection_dim)
-        )
-        
-        # InfoNCE loss with CUDA
-        self.infonce_loss = InfoNCELoss(temperature=temperature)
-    
-    def forward(self, x1, x2):
-        """
-        x1, x2: Batch of positive augmentations [batch_size, C, H, W]
-        """
-        batch_size = x1.size(0)
-        
-        # Encoding
-        h1 = self.encoder(x1)
-        h2 = self.encoder(x2)
-        
-        # Projection and normalization
-        z1 = F.normalize(self.projector(h1), dim=1)
-        z2 = F.normalize(self.projector(h2), dim=1)
-        
-        # Concatenate in InfoNCE format: [z1; z2]
-        # Each z1[i] has as positive z2[i] = features[i + batch_size]
-        features = torch.cat([z1, z2], dim=0)
-        
-        # Calculate InfoNCE loss
-        loss = self.infonce_loss(features)
-        return loss
+**CUBLAS Operations** (`use_cublas=True`):
+- ✅ Più stabile su hardware diverso
+- ✅ Leverages highly optimized BLAS
 
-# Training example
-model = SimCLRModel(torchvision.models.resnet50(pretrained=True))
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-
-# Training step
-x1, x2 = augment_batch(data)  # Two augmentations
-loss = model(x1, x2)
-optimizer.zero_grad()
-loss.backward()
-optimizer.step()
-```
 ### Comparison with Vanilla PyTorch
 
 ```python
@@ -187,36 +165,19 @@ def pytorch_infonce_reference(features, temperature=0.5):
 # Correctness test
 features = F.normalize(torch.randn(128, 256), dim=1).cuda()
 
-# CUDA implementation
-loss_cuda = info_nce_loss(features, temperature=0.5)
+# CuBlaze implementations
+loss_cuda = InfoNCELoss(temperature=0.5, use_cublas=False)(features)
+loss_cublas = InfoNCELoss(temperature=0.5, use_cublas=True)(features)
 
 # Reference implementation  
 loss_pytorch = pytorch_infonce_reference(features, temperature=0.5)
 
-print(f"CUDA Loss: {loss_cuda.item():.6f}")
+print(f"CUDA Custom Loss: {loss_cuda.item():.6f}")
+print(f"CUBLAS Loss: {loss_cublas.item():.6f}")
 print(f"PyTorch Loss: {loss_pytorch.item():.6f}")
-print(f"Difference: {abs(loss_cuda.item() - loss_pytorch.item()):.8f}")
+print(f"CUDA vs PyTorch: {abs(loss_cuda.item() - loss_pytorch.item()):.8f}")
+print(f"CUBLAS vs PyTorch: {abs(loss_cublas.item() - loss_pytorch.item()):.8f}")
 ```
-
-## Performance and Benchmarks
-
-### CUDA Advantages
-
-| Metric | PyTorch Vanilla | CUDA Implementation | Speedup |
-|---------|----------------|---------------------|---------|
-| **Forward pass** | 12.3ms | 4.2ms | **2.9x** |
-| **Backward pass** | 18.7ms | 6.8ms | **2.7x** |
-| **Memory usage** | 2.1GB | 1.4GB | **33% reduction** |
-| **Numerical stability** | Good | Excellent | ✅ |
-
-*Benchmarks on batch_size=128, feature_dim=512, RTX 3080*
-
-### CUDA Optimizations
-
-1. **Similarity Matrix Kernel**: Parallel dot product computation 
-2. **Numerically Stable Softmax**: LogSumExp with max scaling
-3. **Fused Operations**: Reduced memory bandwidth
-4. **Memory Coalescing**: Optimized GPU memory access
 
 ## API Reference
 
@@ -224,10 +185,11 @@ print(f"Difference: {abs(loss_cuda.item() - loss_pytorch.item()):.8f}")
 
 ```python
 class InfoNCELoss(nn.Module):
-    def __init__(self, temperature=0.5):
+    def __init__(self, temperature=0.5, use_cublas=False):
         """
         Args:
             temperature (float): Temperature parameter for similarity scaling
+            use_cublas (bool): If True, uses CUBLAS operations. If False, uses custom CUDA kernels
         """
         
     def forward(self, features):
@@ -240,127 +202,79 @@ class InfoNCELoss(nn.Module):
         """
 ```
 
-### info_nce_loss (Function)
+### InfoNCEFunction (Advanced)
 
 ```python
-def info_nce_loss(features, temperature=0.5):
-    """
-    Helper function for InfoNCE loss computation
-    
-    Args:
-        features (Tensor): Shape (2*batch_size, feature_dim), L2 normalized
-        temperature (float): Temperature scaling parameter
+class InfoNCEFunction(Function):
+    @staticmethod
+    def apply(features, temperature, use_cublas):
+        """
+        Direct autograd function call for advanced users
         
-    Returns:
-        Tensor: Scalar loss value with autograd support
-    """
+        Args:
+            features (Tensor): Shape (2*batch_size, feature_dim), L2 normalized
+            temperature (float): Temperature scaling parameter
+            use_cublas (bool): Backend selection
+            
+        Returns:
+            Tensor: Scalar loss value with autograd support
+        """
+```
+
+### Package Exports
+
+```python
+from cublaze import InfoNCELoss, InfoNCEFunction
+
+# Main classes available at package level
+loss_fn = InfoNCELoss(temperature=0.5, use_cublas=False)
 ```
 
 ## Testing and Verification
 
-### Correctness Tests
+### Automatic Testing
 
 ```bash
-# Run automatic tests
+# Run complete test suite
 python test_implementation.py
+
+# Run performance analysis with visualizations
+python performance.py
 ```
 
-The script verifies:
-- ✅ **Numerical correctness**: Comparison with PyTorch implementation
-- ✅ **Gradients**: Accurate backward pass verification
-- ✅ **Performance**: Execution time benchmarks
-- ✅ **Memory**: GPU memory usage monitoring
+### Test Coverage
 
-### Custom Tests
+Il script di test verifica:
+- ✅ **Numerical correctness**: Confronto con implementazione PyTorch di riferimento
+- ✅ **Both backends**: Test sia custom CUDA che CUBLAS
+- ✅ **Gradient accuracy**: Verifica backward pass accurato
+- ✅ **Performance benchmarks**: Tempi di esecuzione per entrambi i backend
+- ✅ **Error tolerance**: Verifica precisione numerica
 
-```python
-import torch
-from infonce_cuda.infonce_cuda_module import info_nce_loss
+### Performance Analysis
 
-def test_custom_batch():
-    # Test parameters
-    batch_size = 32
-    feature_dim = 128
-    temperature = 0.1
-    
-    # Generate normalized features
-    features = F.normalize(torch.randn(2 * batch_size, feature_dim), dim=1).cuda()
-    features.requires_grad_(True)
-    
-    # Calculate loss
-    loss = info_nce_loss(features, temperature)
-    
-    # Verify properties
-    assert loss.requires_grad == True
-    assert loss.dim() == 0  # Scalar
-    assert not torch.isnan(loss)
-    
-    # Test gradients
-    loss.backward()
-    assert features.grad is not None
-    assert not torch.isnan(features.grad).any()
-    
-    print("✅ Test passed!")
-
-test_custom_batch()
-```
-
-## Troubleshooting
-
-### Common Errors
-
-**🔧 CUDA out of memory**
-```python
-# Reduce batch size or feature dimension
-batch_size = 32  # instead of 128
-```
-
-**🔧 Build errors**
 ```bash
-# Verify CUDA Toolkit
-nvcc --version
-
-# Verify PyTorch CUDA
-python -c "import torch; print(torch.cuda.is_available())"
+# Generate comprehensive performance reports with plots
+python performance.py
 ```
 
-**🔧 Dimension mismatch**
-```python
-# Ensure batch_size is even
-assert features.size(0) % 2 == 0
+Genera:
+- 📊 Grafici di confronto velocità
+- 📈 Analisi scalabilità batch size
+- 🔍 Analisi accuratezza numerica
 
-# Features must be L2 normalized
-features = F.normalize(features, dim=1)
-```
+### Generated Reports
 
-**🔧 Runtime errors**
-```python
-# Tensors must be on GPU
-features = features.cuda()
-
-# Float type required
-features = features.float()
-```
-
-### Performance Tips
-
-1. **Pre-allocation**: Reuse tensors when possible
-2. **Batch Size**: Optimize for your GPU (multiples of 32)
-3. **Temperature**: Values too low can cause instability
-4. **Mixed Precision**: Consider AMP for modern GPUs
-
-## Technical Documentation
-
-For complete implementation details:
-
-- 📖 **[CUDA Implementation Report](report/CUDA_IMPLEMENTATION_REPORT.pdf)**: Detailed technical analysis of kernels
-- 📖 **[Mathematical Derivation](report/infoNCE.pdf)**: Complete mathematical gradient derivation
+Dopo aver eseguito `performance.py`, troverai in `/images/`:
+- `execution_times.png`: Confronto tempi esecuzione
+- `speedup_comparison.png`: Analisi speedup per backend
+- `gradient_error.png`: Accuratezza gradienti
+- `loss_error.png`: Errori di loss
+- `performance_overview.png`: Overview completo prestazioni
 
 ## References
 
-- **SimCLR**: [A Simple Framework for Contrastive Learning](https://arxiv.org/abs/2002.05709)
 - **InfoNCE**: [Representation Learning with Contrastive Predictive Coding](https://arxiv.org/abs/1807.03748)
-- **MoCo**: [Momentum Contrast for Unsupervised Visual Representation Learning](https://arxiv.org/abs/1911.05722)
 
 ## License
 
@@ -369,5 +283,6 @@ This project is released under MIT License. See `LICENSE` for details.
 ---
 
 **Author**: Gianni Moretti  
-**Version**: 1.0  
+**Package**: CuBlaze  
+**Version**: 0.1  
 **Last Updated**: July 2025
