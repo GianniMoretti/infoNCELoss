@@ -5,9 +5,6 @@ ________________________________________________________________________________
     variabili di grandezza dei grid e kernel  !!!
 
 
-- Riguarda tutti i commenti e traduci in inglese.
-- Aggiungere la possibilità di mettere la precisione float di calcolo. 
-    (Controlla se la differenza nel calcolo è data dalla precisione float)
 - Una volta cambiato tutto aggiorna i vari report README etc.
 - Creare il report usando il tamplate per il prof.
 
