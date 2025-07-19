@@ -1,0 +1,137 @@
+Testing New InfoNCE CUDA Implementation
+==================================================
+Using device: NVIDIA GeForce RTX 4070 SUPER
+PyTorch version: 2.5.0+cu124
+=== Test di Correttezza ===
+Testing CUDA implementation...
+Testing reference implementation...
+CUDA Loss: 2.014239
+Reference Loss: 2.014239
+Differenza: 0.00000024
+
+Testing gradients...
+Max gradient difference: 0.00000002
+Mean gradient difference: 0.00000000
+
+Loss match (tol=1e-05): ✓
+Gradient match (tol=0.0001): ✓
+
+🎉 Correctness tests PASSED!
+
+=== Test di Performance ===
+CUDA time: 0.0971s (9.71ms per iteration)
+Reference time: 0.0036s (0.36ms per iteration)
+Speedup: 0.04x
+
+=== Test con Diverse Dimensioni ===
+
+Testing batch_size = 2 (total samples = 4)
+  Loss difference: 0.00000572
+  ✓ Passed
+
+Testing batch_size = 8 (total samples = 16)
+  Loss difference: 0.00000381
+  ✓ Passed
+
+Testing batch_size = 16 (total samples = 32)
+  Loss difference: 0.00000763
+  ✓ Passed
+
+Testing batch_size = 32 (total samples = 64)
+  Loss difference: 0.00000000
+  ✓ Passed
+
+~/code/CUDAPython/infoNCELoss  main [!] +2 -2                                                                                                                                      2s  pyenv@system 09:32:27
+❯ /home/gianni_moretti/.pyenv/versions/torch_cuda/bin/python /home/gianni_moretti/code/CUDAPython/infoNCELoss/test_implementation.py
+Testing New InfoNCE CUDA Implementation
+==================================================
+Using device: NVIDIA GeForce RTX 4070 SUPER
+PyTorch version: 2.5.0+cu124
+=== Test di Correttezza ===
+Testing CUDA implementation...
+Testing reference implementation...
+CUDA Loss: 2.014239
+Reference Loss: 2.014239
+Differenza: 0.00000024
+
+Testing gradients...
+Max gradient difference: 0.00000002
+Mean gradient difference: 0.00000000
+
+Loss match (tol=1e-05): ✓
+Gradient match (tol=0.0001): ✓
+
+🎉 Correctness tests PASSED!
+
+=== Test di Performance ===
+CUDA forward time: 0.0986s (9.86ms per iteration)
+CUDA backward time: 0.1956s (19.56ms per iteration)
+CUDA total time: 0.2941s (29.41ms per iteration)
+Reference forward time: 0.0041s (0.41ms per iteration)
+Reference backward time: 0.0059s (0.59ms per iteration)
+Reference total time: 0.0100s (1.00ms per iteration)
+Forward speedup: 0.04x
+Backward speedup: 0.03x
+Total speedup: 0.03x
+
+=== Test con Diverse Dimensioni ===
+
+Testing batch_size = 128 (total samples = 256)
+  Loss difference: 0.00001526
+  ✗ Failed
+
+Testing batch_size = 256 (total samples = 512)
+  Loss difference: 0.00003815
+  ✗ Failed
+
+Testing batch_size = 512 (total samples = 1024)
+  Loss difference: 0.00003815
+  ✗ Failed
+
+Testing batch_size = 2048 (total samples = 4096)
+  Loss difference: 0.00012207
+  ✗ Failed
+
+
+# def info_nce_loss(features, temperature=0.5):
+#     """
+#     Helper function that exactly replicates the provided Python code
+    
+#     Args:
+#         features (Tensor): shape (2*batch_size, feature_dim), where
+#                            each sample i and i+batch_size form a positive pair.
+#                            MUST be already L2 normalized.
+#         temperature (float): temperature scaling parameter.
+
+#     Returns:
+#         torch.Tensor: scalar loss value.
+#     """
+#     loss_fn = InfoNCELoss(temperature=temperature)
+#     return loss_fn(features)
+
+# # Helper function for direct comparisons (without autograd)  
+# def infonce_loss_cuda_no_grad(features, temperature=0.5):
+#     """
+#     Calculates InfoNCE Loss without autograd support (for testing/comparisons)
+#     """
+#     # Direct implementation without autograd
+#     device = features.device
+#     batch_size = features.shape[0] // 2
+
+#     # Compute similarity matrix (dot product)
+#     similarity_matrix = torch.matmul(features, features.T)  # (2B, 2B)
+
+#     # Remove self-similarity by masking the diagonal
+#     mask = torch.eye(2 * batch_size, dtype=torch.bool, device=device)
+#     similarity_matrix = similarity_matrix.masked_fill(mask, float('-inf'))
+
+#     # Labels: positive pair for i is at (i + B) % (2B)
+#     labels = torch.arange(batch_size, device=device)
+#     labels = torch.cat([labels + batch_size, labels])
+
+#     # Scale similarities by temperature
+#     similarity_matrix /= temperature
+
+#     # Apply cross entropy loss
+#     loss = F.cross_entropy(similarity_matrix, labels)
+#     return loss

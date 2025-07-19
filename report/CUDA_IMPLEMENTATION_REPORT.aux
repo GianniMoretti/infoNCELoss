@@ -2,72 +2,72 @@
 \providecommand\hyper@newdestlabel[2]{}
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
-\@writefile{toc}{\contentsline {section}{\numberline {1}Introduzione}{2}{section.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Obiettivi dell'Implementazione}{2}{subsection.1.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Architettura dell'Implementazione}{2}{subsection.1.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {2}Analisi Dettagliata dei Kernel CUDA}{2}{section.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Kernel per la Matrice di Similarità}{2}{subsection.2.1}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}Kernel per il calcolo della matrice di similarità}{2}{lstlisting.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1}Analisi Tecnica}{3}{subsubsection.2.1.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Organizzazione dei Thread:}{3}{section*.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Accesso alla Memoria:}{3}{section*.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Complessità Computazionale:}{3}{section*.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Kernel per Loss e Gradienti Logits}{3}{subsection.2.2}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {2}Kernel per calcolo loss e gradienti}{3}{lstlisting.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.1}Analisi Tecnica}{4}{subsubsection.2.2.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Stabilità Numerica:}{4}{section*.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Parallelizzazione:}{4}{section*.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Calcolo dei Gradienti:}{4}{section*.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Kernel per Gradienti delle Features}{4}{subsection.2.3}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}Kernel per calcolo gradienti features}{4}{lstlisting.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.1}Derivazione Matematica}{5}{subsubsection.2.3.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Parallelizzazione 2D:}{5}{section*.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3}Funzioni di Interfaccia C++}{5}{section.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Funzione Forward}{5}{subsection.3.1}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {4}Funzione forward C++}{5}{lstlisting.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.1}Gestione della Memoria}{6}{subsubsection.3.1.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Tensor Management:}{6}{section*.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Labels Configuration:}{6}{section*.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Funzione Backward}{6}{subsection.3.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}Ottimizzazioni e Considerazioni delle Prestazioni}{7}{section.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Ottimizzazioni Implementate}{7}{subsection.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Memory Coalescing:}{7}{section*.11}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Occupancy:}{7}{section*.12}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Analisi delle Prestazioni}{7}{subsection.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Risultati dei Benchmark:}{7}{section*.13}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Bottleneck Analysis:}{7}{section*.14}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Integrazione con PyTorch}{7}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Autograd Function}{7}{subsection.5.1}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {5}Integrazione autograd}{7}{lstlisting.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Module Interface}{8}{subsection.5.2}\protected@file@percent }
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {6}Interface PyTorch}{8}{lstlisting.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Validazione e Testing}{8}{section.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Test di Correttezza}{8}{subsection.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Metodologia:}{8}{section*.15}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Risultati:}{8}{section*.16}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Analisi degli Errori Numerici}{8}{subsection.6.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Fonti di Errore:}{8}{section*.17}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Mitigazioni:}{8}{section*.18}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {7}Confronto con Implementazioni Alternative}{9}{section.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}PyTorch Built-in}{9}{subsection.7.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Vantaggi dell'implementazione CUDA:}{9}{section*.19}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Svantaggi:}{9}{section*.20}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Altre Implementazioni Contrastive}{9}{subsection.7.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {8}Conclusioni e Sviluppi Futuri}{9}{section.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Risultati Ottenuti}{9}{subsection.8.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Possibili Miglioramenti}{9}{subsection.8.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Ottimizzazioni Avanzate:}{9}{section*.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{3}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Implementation Objectives}{3}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Implementation Architecture}{3}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Detailed Analysis of CUDA Kernels}{3}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Similarity Matrix Kernel}{3}{subsection.2.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}Kernel for similarity matrix calculation}{3}{lstlisting.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1}Technical Analysis}{4}{subsubsection.2.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Thread Organization:}{4}{section*.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Memory Access:}{4}{section*.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Computational Complexity:}{4}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Kernel for Loss and Logits Gradients}{4}{subsection.2.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {2}Kernel for loss and gradient calculation}{4}{lstlisting.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.1}Technical Analysis}{5}{subsubsection.2.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Numerical Stability:}{5}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Parallelization:}{5}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Gradient Calculation:}{5}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Kernel for Feature Gradients}{5}{subsection.2.3}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}Kernel for feature gradient calculation}{5}{lstlisting.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.1}Mathematical Derivation}{6}{subsubsection.2.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{2D Parallelization:}{6}{section*.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}C++ Interface Functions}{6}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Forward Function}{6}{subsection.3.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {4}C++ forward function}{6}{lstlisting.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.1}Memory Management}{7}{subsubsection.3.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Tensor Management:}{7}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Labels Configuration:}{7}{section*.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Backward Function}{7}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Optimizations and Performance Considerations}{8}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Implemented Optimizations}{8}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Memory Coalescing:}{8}{section*.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Occupancy:}{8}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Performance Analysis}{8}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Benchmark Results:}{8}{section*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Bottleneck Analysis:}{8}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}PyTorch Integration}{8}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Autograd Function}{8}{subsection.5.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {5}Autograd integration}{8}{lstlisting.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Module Interface}{9}{subsection.5.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {6}Interface PyTorch}{9}{lstlisting.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Validation and Testing}{9}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Correctness Tests}{9}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Methodology:}{9}{section*.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Results:}{9}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Numerical Error Analysis}{9}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Error Sources:}{9}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Mitigations:}{9}{section*.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Comparison with Alternative Implementations}{10}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}PyTorch Built-in}{10}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Advantages of CUDA implementation:}{10}{section*.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Disadvantages:}{10}{section*.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Other Contrastive Implementations}{10}{subsection.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Conclusions and Future Developments}{10}{section.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Achieved Results}{10}{subsection.8.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Possible Improvements}{10}{subsection.8.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Advanced Optimizations:}{10}{section*.21}\protected@file@percent }
 \bibstyle{plain}
 \bibcite{infonce}{1}
-\@writefile{toc}{\contentsline {paragraph}{Funzionalità Aggiuntive:}{10}{section*.22}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}Applicazioni Pratiche}{10}{subsection.8.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {9}Appendici}{10}{section.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}Appendice A: Configurazioni CUDA Ottimali}{10}{subsection.9.1}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Configurazioni ottimali per diversi kernel}}{10}{table.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.2}Appendice B: Profiling delle Prestazioni}{10}{subsection.9.2}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Confronto prestazioni per diverse configurazioni}}{10}{table.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {9.3}Appendice C: Codice Completo}{10}{subsection.9.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Funzionalità Aggiuntive:}{11}{section*.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}Applicazioni Pratiche}{11}{subsection.8.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Appendici}{11}{section.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}Appendix A: Optimal CUDA Configurations}{11}{subsection.9.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Optimal configurations for different kernels}}{11}{table.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.2}Appendix B: Performance Profiling}{11}{subsection.9.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Performance comparison for different configurations}}{11}{table.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3}Appendix C: Complete Code}{11}{subsection.9.3}\protected@file@percent }
 \bibcite{simclr}{2}
 \bibcite{cuda}{3}
 \bibcite{pytorch}{4}
-\gdef \@abspage@last{11}
+\gdef \@abspage@last{12}

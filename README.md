@@ -1,10 +1,10 @@
 # InfoNCE Loss CUDA Implementation
 
-Implementazione CUDA ad alte prestazioni della **InfoNCE Loss** (Information Noise-Contrastive Estimation) per self-supervised contrastive learning. Questa implementazione supporta il batch processing completo con integrazione nativa di PyTorch autograd.
+High-performance CUDA implementation of **InfoNCE Loss** (Information Noise-Contrastive Estimation) for self-supervised contrastive learning. This implementation supports complete batch processing with native PyTorch autograd integration.
 
-## Cos'è InfoNCE Loss?
+## What is InfoNCE Loss?
 
-InfoNCE Loss è una funzione di perdita fondamentale nel contrastive learning che massimizza l'accordo tra coppie positive di esempi e minimizza l'accordo con esempi negativi. La formula matematica è:
+InfoNCE Loss is a fundamental loss function in contrastive learning that maximizes agreement between positive pairs of examples and minimizes agreement with negative examples. The mathematical formula is:
 
 ```
 InfoNCE = -1/N Σᵢ log(exp(sim(zᵢ, z_p(i))/τ) / Σⱼ exp(sim(zᵢ, zⱼ)/τ))
@@ -17,97 +17,97 @@ Dove:
 - `sim(a,b) = a·b` è la similarità coseno (dot product per vettori normalizzati)
 - `τ` è il parametro temperatura
 
-## Caratteristiche dell'Implementazione
+## Implementation Features
 
-✅ **Batch Processing Completo**: Elabora matrici di features (2*batch_size, feature_dim)  
-✅ **Autograd Nativo**: Integrazione completa con PyTorch backward pass  
-✅ **Stabilità Numerica**: Calcoli numericamente stabili anche con temperature basse  
-✅ **GPU Ottimizzata**: Kernel CUDA custom per massime prestazioni  
-✅ **Compatibilità SimCLR**: Design specifico per contrastive learning frameworks  
+✅ **Complete Batch Processing**: Processes feature matrices (2*batch_size, feature_dim)  
+✅ **Native Autograd**: Complete integration with PyTorch backward pass  
+✅ **Numerical Stability**: Numerically stable calculations even with low temperatures  
+✅ **GPU Optimized**: Custom CUDA kernels for maximum performance  
+✅ **SimCLR Compatibility**: Specific design for contrastive learning frameworks  
 
-## Struttura del Progetto
+## Project Structure
 
 ```
 InfoNCEloss_cuda/
 ├── infonce_cuda/
-│   ├── __init__.py                    # Esportazioni principali
-│   ├── infonce_cuda_module.py        # Implementazione Python/autograd
+│   ├── __init__.py                    # Main exports
+│   ├── infonce_cuda_module.py        # Python/autograd implementation
 │   └── cuda/
-│       ├── infonce_cuda.cu           # Kernel CUDA ottimizzati
-│       └── infonce_cuda_wrapp.cpp    # Wrapper PyBind11
-├── setup.py                          # Configurazione build
-├── build_and_test.sh                 # Script automatico build+test
-├── test_implementation.py            # Test di correttezza e performance
+│       ├── infonce_cuda.cu           # Optimized CUDA kernels
+│       └── infonce_cuda_wrapp.cpp    # PyBind11 wrapper
+├── setup.py                          # Build configuration
+├── build_and_test.sh                 # Automatic build+test script
+├── test_implementation.py            # Correctness and performance tests
 ├── report/
-│   ├── CUDA_IMPLEMENTATION_REPORT.pdf # Documentazione tecnica completa
-│   └── infoNCE.pdf                   # Derivazione matematica
-└── README.md                         # Questa documentazione
+│   ├── CUDA_IMPLEMENTATION_REPORT.pdf # Complete technical documentation
+│   └── infoNCE.pdf                   # Mathematical derivation
+└── README.md                         # This documentation
 ```
 
-## Installazione
+## Installation
 
-### Prerequisiti
+### Prerequisites
 - **Python** >= 3.8
-- **PyTorch** >= 1.7.0 con supporto CUDA
+- **PyTorch** >= 1.7.0 with CUDA support
 - **CUDA Toolkit** >= 11.0
-- **Compilatore C++** compatibile (g++ >= 7)
+- **Compatible C++ compiler** (g++ >= 7)
 
-### Build Automatico
+### Automatic Build
 
 ```bash
-# Clona il repository
+# Clone the repository
 git clone <repository_url>
 cd InfoNCEloss_cuda/
 
-# Esegui build e test automatici
+# Run automatic build and tests
 chmod +x build_and_test.sh
 ./build_and_test.sh
 ```
 
-### Build Manuale
+### Manual Build
 
 ```bash
-# Pulisci build precedenti
+# Clean previous builds
 rm -rf build/ *.so
 
-# Build estensione CUDA
+# Build CUDA extension
 python setup.py build_ext --inplace
 
-# Test funzionalità
+# Test functionality
 python test_implementation.py
 ```
 
-## Utilizzo
+## Usage
 
-### Implementazione Base
+### Basic Implementation
 
 ```python
 import torch
 import torch.nn.functional as F
 from infonce_cuda.infonce_cuda_module import InfoNCELoss, info_nce_loss
 
-# Prepara features per contrastive learning
+# Prepare features for contrastive learning
 batch_size = 64
 feature_dim = 256
 
-# Simula encoder output (es. da ResNet)
+# Simulate encoder output (e.g. from ResNet)
 raw_features = torch.randn(2 * batch_size, feature_dim).cuda()
 
-# IMPORTANTE: Normalizza L2 le features
+# IMPORTANT: L2 normalize the features
 features = F.normalize(raw_features, dim=1)
 
-# Metodo 1: Classe modulare
+# Method 1: Modular class
 loss_fn = InfoNCELoss(temperature=0.5)
 loss = loss_fn(features)
 
-# Metodo 2: Funzione diretta
+# Method 2: Direct function
 loss = info_nce_loss(features, temperature=0.5)
 
-# Calcola gradienti
+# Calculate gradients
 loss.backward()
 ```
 
-### Integrazione SimCLR Completa
+### Complete SimCLR Integration
 
 ```python
 import torch.nn as nn
@@ -124,12 +124,12 @@ class SimCLRModel(nn.Module):
             nn.Linear(512, projection_dim)
         )
         
-        # InfoNCE loss con CUDA
+        # InfoNCE loss with CUDA
         self.infonce_loss = InfoNCELoss(temperature=temperature)
     
     def forward(self, x1, x2):
         """
-        x1, x2: Batch di augmentazioni positive [batch_size, C, H, W]
+        x1, x2: Batch of positive augmentations [batch_size, C, H, W]
         """
         batch_size = x1.size(0)
         
@@ -137,54 +137,54 @@ class SimCLRModel(nn.Module):
         h1 = self.encoder(x1)
         h2 = self.encoder(x2)
         
-        # Projection e normalizzazione
+        # Projection and normalization
         z1 = F.normalize(self.projector(h1), dim=1)
         z2 = F.normalize(self.projector(h2), dim=1)
         
-        # Concatena in formato InfoNCE: [z1; z2]
-        # Ogni z1[i] ha come positivo z2[i] = features[i + batch_size]
+        # Concatenate in InfoNCE format: [z1; z2]
+        # Each z1[i] has as positive z2[i] = features[i + batch_size]
         features = torch.cat([z1, z2], dim=0)
         
-        # Calcola InfoNCE loss
+        # Calculate InfoNCE loss
         loss = self.infonce_loss(features)
         return loss
 
-# Esempio di training
+# Training example
 model = SimCLRModel(torchvision.models.resnet50(pretrained=True))
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
 # Training step
-x1, x2 = augment_batch(data)  # Tue augmentazioni
+x1, x2 = augment_batch(data)  # Two augmentations
 loss = model(x1, x2)
 optimizer.zero_grad()
 loss.backward()
 optimizer.step()
 ```
-### Confronto con PyTorch Vanilla
+### Comparison with Vanilla PyTorch
 
 ```python
 def pytorch_infonce_reference(features, temperature=0.5):
-    """Implementazione di riferimento PyTorch"""
+    """PyTorch reference implementation"""
     device = features.device
     batch_size = features.shape[0] // 2
 
-    # Matrice similarità
+    # Similarity matrix
     similarity_matrix = torch.matmul(features, features.T)
     
-    # Maschera diagonale
+    # Mask diagonal
     mask = torch.eye(2 * batch_size, dtype=torch.bool, device=device)
     similarity_matrix = similarity_matrix.masked_fill(mask, float('-inf'))
     
-    # Labels per coppie positive
+    # Labels for positive pairs
     labels = torch.arange(batch_size, device=device)
     labels = torch.cat([labels + batch_size, labels])
     
-    # Cross-entropy con temperatura
+    # Cross-entropy with temperature
     similarity_matrix /= temperature
     loss = F.cross_entropy(similarity_matrix, labels)
     return loss
 
-# Test di correttezza
+# Correctness test
 features = F.normalize(torch.randn(128, 256), dim=1).cuda()
 
 # CUDA implementation
@@ -198,25 +198,25 @@ print(f"PyTorch Loss: {loss_pytorch.item():.6f}")
 print(f"Difference: {abs(loss_cuda.item() - loss_pytorch.item()):.8f}")
 ```
 
-## Performance e Benchmark
+## Performance and Benchmarks
 
-### Vantaggi CUDA
+### CUDA Advantages
 
-| Metrica | PyTorch Vanilla | CUDA Implementation | Speedup |
+| Metric | PyTorch Vanilla | CUDA Implementation | Speedup |
 |---------|----------------|---------------------|---------|
 | **Forward pass** | 12.3ms | 4.2ms | **2.9x** |
 | **Backward pass** | 18.7ms | 6.8ms | **2.7x** |
 | **Memory usage** | 2.1GB | 1.4GB | **33% reduction** |
-| **Numerical stability** | Buona | Eccellente | ✅ |
+| **Numerical stability** | Good | Excellent | ✅ |
 
-*Benchmark su batch_size=128, feature_dim=512, RTX 3080*
+*Benchmarks on batch_size=128, feature_dim=512, RTX 3080*
 
-### Ottimizzazioni CUDA
+### CUDA Optimizations
 
-1. **Kernel Similarity Matrix**: Calcolo parallelo dot products 
-2. **Numerically Stable Softmax**: LogSumExp con max scaling
-3. **Fused Operations**: Riduzione memory bandwidth
-4. **Memory Coalescing**: Accessi ottimizzati GPU memory
+1. **Similarity Matrix Kernel**: Parallel dot product computation 
+2. **Numerically Stable Softmax**: LogSumExp with max scaling
+3. **Fused Operations**: Reduced memory bandwidth
+4. **Memory Coalescing**: Optimized GPU memory access
 
 ## API Reference
 
@@ -227,16 +227,16 @@ class InfoNCELoss(nn.Module):
     def __init__(self, temperature=0.5):
         """
         Args:
-            temperature (float): Parametro temperatura per scaling similarità
+            temperature (float): Temperature parameter for similarity scaling
         """
         
     def forward(self, features):
         """
         Args:
             features (Tensor): Shape (2*batch_size, feature_dim)
-                              DEVE essere normalizzato L2
+                              MUST be L2 normalized
         Returns:
-            Tensor: Scalar loss con gradienti
+            Tensor: Scalar loss with gradients
         """
 ```
 
@@ -245,57 +245,57 @@ class InfoNCELoss(nn.Module):
 ```python
 def info_nce_loss(features, temperature=0.5):
     """
-    Funzione helper per calcolo InfoNCE loss
+    Helper function for InfoNCE loss computation
     
     Args:
         features (Tensor): Shape (2*batch_size, feature_dim), L2 normalized
         temperature (float): Temperature scaling parameter
         
     Returns:
-        Tensor: Scalar loss value con autograd support
+        Tensor: Scalar loss value with autograd support
     """
 ```
 
-## Testing e Verifica
+## Testing and Verification
 
-### Test di Correttezza
+### Correctness Tests
 
 ```bash
-# Esegui test automatici
+# Run automatic tests
 python test_implementation.py
 ```
 
-Il script verifica:
-- ✅ **Correttezza numerica**: Confronto con implementazione PyTorch
-- ✅ **Gradienti**: Verifica backward pass accurato
-- ✅ **Performance**: Benchmark tempi esecuzione
-- ✅ **Memory**: Controllo utilizzo memoria GPU
+The script verifies:
+- ✅ **Numerical correctness**: Comparison with PyTorch implementation
+- ✅ **Gradients**: Accurate backward pass verification
+- ✅ **Performance**: Execution time benchmarks
+- ✅ **Memory**: GPU memory usage monitoring
 
-### Test Personalizzati
+### Custom Tests
 
 ```python
 import torch
 from infonce_cuda.infonce_cuda_module import info_nce_loss
 
 def test_custom_batch():
-    # Parametri test
+    # Test parameters
     batch_size = 32
     feature_dim = 128
     temperature = 0.1
     
-    # Genera features normalizzate
+    # Generate normalized features
     features = F.normalize(torch.randn(2 * batch_size, feature_dim), dim=1).cuda()
     features.requires_grad_(True)
     
-    # Calcola loss
+    # Calculate loss
     loss = info_nce_loss(features, temperature)
     
-    # Verifica proprietà
+    # Verify properties
     assert loss.requires_grad == True
     assert loss.dim() == 0  # Scalar
     assert not torch.isnan(loss)
     
-    # Test gradienti
+    # Test gradients
     loss.backward()
     assert features.grad is not None
     assert not torch.isnan(features.grad).any()
@@ -307,67 +307,67 @@ test_custom_batch()
 
 ## Troubleshooting
 
-### Errori Comuni
+### Common Errors
 
 **🔧 CUDA out of memory**
 ```python
-# Riduci batch size o feature dimension
-batch_size = 32  # invece di 128
+# Reduce batch size or feature dimension
+batch_size = 32  # instead of 128
 ```
 
 **🔧 Build errors**
 ```bash
-# Verifica CUDA Toolkit
+# Verify CUDA Toolkit
 nvcc --version
 
-# Verifica PyTorch CUDA
+# Verify PyTorch CUDA
 python -c "import torch; print(torch.cuda.is_available())"
 ```
 
 **🔧 Dimension mismatch**
 ```python
-# Assicurati che batch_size sia pari
+# Ensure batch_size is even
 assert features.size(0) % 2 == 0
 
-# Features devono essere normalizzate L2
+# Features must be L2 normalized
 features = F.normalize(features, dim=1)
 ```
 
 **🔧 Runtime errors**
 ```python
-# Tensori devono essere su GPU
+# Tensors must be on GPU
 features = features.cuda()
 
-# Tipo float necessario
+# Float type required
 features = features.float()
 ```
 
 ### Performance Tips
 
-1. **Pre-allocazione**: Riutilizza tensori quando possibile
-2. **Batch Size**: Ottimizza per la tua GPU (multipli di 32)
-3. **Temperature**: Valori troppo bassi possono causare instabilità
-4. **Mixed Precision**: Considera AMP per GPU moderne
+1. **Pre-allocation**: Reuse tensors when possible
+2. **Batch Size**: Optimize for your GPU (multiples of 32)
+3. **Temperature**: Values too low can cause instability
+4. **Mixed Precision**: Consider AMP for modern GPUs
 
-## Documentazione Tecnica
+## Technical Documentation
 
-Per dettagli implementativi completi:
+For complete implementation details:
 
-- 📖 **[CUDA Implementation Report](report/CUDA_IMPLEMENTATION_REPORT.pdf)**: Analisi tecnica dettagliata dei kernel
-- 📖 **[Mathematical Derivation](report/infoNCE.pdf)**: Derivazione matematica completa dei gradienti
+- 📖 **[CUDA Implementation Report](report/CUDA_IMPLEMENTATION_REPORT.pdf)**: Detailed technical analysis of kernels
+- 📖 **[Mathematical Derivation](report/infoNCE.pdf)**: Complete mathematical gradient derivation
 
-## Riferimenti
+## References
 
 - **SimCLR**: [A Simple Framework for Contrastive Learning](https://arxiv.org/abs/2002.05709)
 - **InfoNCE**: [Representation Learning with Contrastive Predictive Coding](https://arxiv.org/abs/1807.03748)
 - **MoCo**: [Momentum Contrast for Unsupervised Visual Representation Learning](https://arxiv.org/abs/1911.05722)
 
-## Licenza
+## License
 
-Questo progetto è rilasciato sotto licenza MIT. Vedi `LICENSE` per dettagli.
+This project is released under MIT License. See `LICENSE` for details.
 
 ---
 
-**Autore**: Gianni Moretti  
+**Author**: Gianni Moretti  
 **Version**: 1.0  
-**Last Updated**: Luglio 2025
+**Last Updated**: July 2025

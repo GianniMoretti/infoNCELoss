@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Test script per la nuova implementazione InfoNCE CUDA
-Replica esattamente il codice Python fornito e confronta i risultati
+Test script for the new InfoNCE CUDA implementation
+Exactly replicates the provided Python code and compares results
 """
 
 import torch
 import torch.nn.functional as F
-from cublaze.infonce import InfoNCELoss, info_nce_loss
+from cublaze.infonce import InfoNCELoss
 
 def info_nce_loss_reference(features, temperature=0.5):
     """
-    Implementazione di riferimento in PyTorch puro (dal codice fornito dall'utente)
+    Reference implementation in pure PyTorch (from user provided code)
     """
     device = features.device
     batch_size = features.shape[0] // 2
@@ -35,33 +35,34 @@ def info_nce_loss_reference(features, temperature=0.5):
 
 def test_correctness():
     """
-    Test di correttezza confrontando con l'implementazione di riferimento
+    Correctness test comparing with reference implementation
     """
-    print("=== Test di Correttezza ===")
+    print("=== Correctness Test ===")
     
-    # Parametri del test
-    batch_size = 4  # Quindi 2*batch_size = 8
+    # Test parameters
+    batch_size = 4  # So 2*batch_size = 8
     feature_dim = 128
     temperature = 0.5
     
-    # Genera features casuali
+    # Generate random features
     torch.manual_seed(42)
     features = torch.randn(2 * batch_size, feature_dim, device='cuda', requires_grad=True)
-    features = F.normalize(features, dim=1)  # Normalizza L2
+    features = F.normalize(features, dim=1)  # L2 normalize
     
-    # Test dell'implementazione CUDA
+    # Test CUDA implementation
     print("Testing CUDA implementation...")
     features_cuda = features.clone().detach().requires_grad_(True)
-    loss_cuda = info_nce_loss(features_cuda, temperature)
+    cuda_loss_fn = InfoNCELoss(temperature=temperature)
+    loss_cuda = cuda_loss_fn(features_cuda)
     
-    # Test dell'implementazione di riferimento
+    # Test reference implementation
     print("Testing reference implementation...")
     features_ref = features.clone().detach().requires_grad_(True)
     loss_ref = info_nce_loss_reference(features_ref, temperature)
     
     print(f"CUDA Loss: {loss_cuda.item():.6f}")
     print(f"Reference Loss: {loss_ref.item():.6f}")
-    print(f"Differenza: {abs(loss_cuda.item() - loss_ref.item()):.8f}")
+    print(f"Difference: {abs(loss_cuda.item() - loss_ref.item()):.8f}")
     
     # Test dei gradienti
     print("\nTesting gradients...")
@@ -89,54 +90,91 @@ def test_correctness():
 
 def test_performance():
     """
-    Test di performance confrontando i tempi di esecuzione
+    Performance test comparing execution times
     """
-    print("\n=== Test di Performance ===")
+    print("\n=== Performance Test ===")
     
-    batch_size = 64  # 2*batch_size = 128
+    batch_size = 1024  # 2*batch_size = 2048
     feature_dim = 512
     temperature = 0.5
-    num_iterations = 100
+    num_iterations = 10
     
-    # Genera features casuali
+    # Generate random features
     features = torch.randn(2 * batch_size, feature_dim, device='cuda')
+    cuda_loss_fn = InfoNCELoss(temperature=temperature)
     
     # Warm-up
     for _ in range(10):
-        _ = info_nce_loss(features, temperature)
-        _ = info_nce_loss_reference(features, temperature)
+        f_cuda = features.clone().requires_grad_(True)
+        loss_cuda = cuda_loss_fn(f_cuda)
+        loss_cuda.backward()
+        
+        f_ref = features.clone().requires_grad_(True)
+        loss_ref = info_nce_loss_reference(f_ref, temperature)
+        loss_ref.backward()
     
     torch.cuda.synchronize()
     
-    # Test CUDA implementation
+    # Test CUDA implementation - Forward pass
     import time
     start_time = time.time()
     for _ in range(num_iterations):
-        loss_cuda = info_nce_loss(features, temperature)
+        f_cuda = features.clone().requires_grad_(True)
+        loss_cuda = cuda_loss_fn(f_cuda)
     torch.cuda.synchronize()
-    cuda_time = time.time() - start_time
+    cuda_forward_time = time.time() - start_time
     
-    # Test reference implementation
+    # Test CUDA implementation - Forward + Backward pass
     start_time = time.time()
     for _ in range(num_iterations):
-        loss_ref = info_nce_loss_reference(features, temperature)
+        f_cuda = features.clone().requires_grad_(True)
+        loss_cuda = cuda_loss_fn(f_cuda)
+        loss_cuda.backward()
     torch.cuda.synchronize()
-    ref_time = time.time() - start_time
+    cuda_total_time = time.time() - start_time
+    cuda_backward_time = cuda_total_time - cuda_forward_time
     
-    print(f"CUDA time: {cuda_time:.4f}s ({cuda_time/num_iterations*1000:.2f}ms per iteration)")
-    print(f"Reference time: {ref_time:.4f}s ({ref_time/num_iterations*1000:.2f}ms per iteration)")
-    print(f"Speedup: {ref_time/cuda_time:.2f}x")
+    # Test reference implementation - Forward pass
+    start_time = time.time()
+    for _ in range(num_iterations):
+        f_ref = features.clone().requires_grad_(True)
+        loss_ref = info_nce_loss_reference(f_ref, temperature)
+    torch.cuda.synchronize()
+    ref_forward_time = time.time() - start_time
+    
+    # Test reference implementation - Forward + Backward pass
+    start_time = time.time()
+    for _ in range(num_iterations):
+        f_ref = features.clone().requires_grad_(True)
+        loss_ref = info_nce_loss_reference(f_ref, temperature)
+        loss_ref.backward()
+    torch.cuda.synchronize()
+    ref_total_time = time.time() - start_time
+    ref_backward_time = ref_total_time - ref_forward_time
+    
+    print(f"CUDA forward time: {cuda_forward_time:.4f}s ({cuda_forward_time/num_iterations*1000:.2f}ms per iteration)")
+    print(f"CUDA backward time: {cuda_backward_time:.4f}s ({cuda_backward_time/num_iterations*1000:.2f}ms per iteration)")
+    print(f"CUDA total time: {cuda_total_time:.4f}s ({cuda_total_time/num_iterations*1000:.2f}ms per iteration)")
+    
+    print(f"Reference forward time: {ref_forward_time:.4f}s ({ref_forward_time/num_iterations*1000:.2f}ms per iteration)")
+    print(f"Reference backward time: {ref_backward_time:.4f}s ({ref_backward_time/num_iterations*1000:.2f}ms per iteration)")
+    print(f"Reference total time: {ref_total_time:.4f}s ({ref_total_time/num_iterations*1000:.2f}ms per iteration)")
+    
+    print(f"Forward speedup: {ref_forward_time/cuda_forward_time:.2f}x")
+    print(f"Backward speedup: {ref_backward_time/cuda_backward_time:.2f}x")
+    print(f"Total speedup: {ref_total_time/cuda_total_time:.2f}x")
 
 def test_different_sizes():
     """
-    Test con diverse dimensioni del batch
+    Test with different batch sizes
     """
-    print("\n=== Test con Diverse Dimensioni ===")
+    print("\n=== Test with Different Sizes ===")
     
     temperature = 0.5
     feature_dim = 256
+    cuda_loss_fn = InfoNCELoss(temperature=temperature)
     
-    batch_sizes = [2, 8, 16, 32]  # Questi sono i B, quindi 2*B sarà il batch effettivo
+    batch_sizes = [128, 256, 512, 2048]  # These are B values, so 2*B will be actual batch
     
     for B in batch_sizes:
         print(f"\nTesting batch_size = {B} (total samples = {2*B})")
@@ -144,7 +182,7 @@ def test_different_sizes():
         features = torch.randn(2 * B, feature_dim, device='cuda', requires_grad=True)
         
         try:
-            loss_cuda = info_nce_loss(features, temperature)
+            loss_cuda = cuda_loss_fn(features)
             loss_ref = info_nce_loss_reference(features, temperature)
             
             diff = abs(loss_cuda.item() - loss_ref.item())

@@ -1,7 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1752856871.8014 "/home/gianni_moretti/code/CUDAPython/InfoNCEloss_cuda/report/CUDA_IMPLEMENTATION_REPORT.tex" "CUDA_IMPLEMENTATION_REPORT.pdf" "CUDA_IMPLEMENTATION_REPORT" 1752856872.47039 2
+["pdflatex"] 1752912804.79547 "/home/gianni_moretti/code/CUDAPython/infoNCELoss/report/CUDA_IMPLEMENTATION_REPORT.tex" "CUDA_IMPLEMENTATION_REPORT.pdf" "CUDA_IMPLEMENTATION_REPORT" 1752912805.52289 0
   "/etc/texmf/web2c/texmf.cnf" 1740177421.83079 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/gianni_moretti/code/CUDAPython/InfoNCEloss_cuda/report/CUDA_IMPLEMENTATION_REPORT.tex" 1752856870.70434 21074 97eaaf02adc9eb37034cf8dfc77d4a50 ""
+  "/home/gianni_moretti/code/CUDAPython/infoNCELoss/report/CUDA_IMPLEMENTATION_REPORT.tex" 1752912803.9192 20665 5ffbec7359191b53fdcabc85176f752e ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx1095.tfm" 1136768653 3584 21b378cca2e40816b0e6d74a4dc98f04 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx1200.tfm" 1136768653 3584 402da0b29eafbad07963b1224b222f18 ""
@@ -122,10 +122,10 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1744792437.63782 5472669 54eaf61a88b6b7896ebd0dac973cb29c ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1744792526 8214556 21c84b07c7842124c4bf4a5fc93f36d2 ""
-  "CUDA_IMPLEMENTATION_REPORT.aux" 1752856872.36033 8046 56870dc9d45d5babe42fd61628108998 "pdflatex"
-  "CUDA_IMPLEMENTATION_REPORT.out" 1752856872.36133 6463 c4899dc3aa1b363d226c0f7fd9f9e71e "pdflatex"
-  "CUDA_IMPLEMENTATION_REPORT.tex" 1752856870.70434 21074 97eaaf02adc9eb37034cf8dfc77d4a50 ""
-  "CUDA_IMPLEMENTATION_REPORT.toc" 1752856872.36133 4423 5571324ab566f690007abff15a6ea998 "pdflatex"
+  "CUDA_IMPLEMENTATION_REPORT.aux" 1752912805.43609 7964 dbe15db21935a353ba057293226cbab2 "pdflatex"
+  "CUDA_IMPLEMENTATION_REPORT.out" 1752912805.43709 6114 048ba9b95020e16f198c36cb99077fe8 "pdflatex"
+  "CUDA_IMPLEMENTATION_REPORT.tex" 1752912803.9192 20665 5ffbec7359191b53fdcabc85176f752e ""
+  "CUDA_IMPLEMENTATION_REPORT.toc" 1752912805.43709 4340 3f36bbbac9c5f2648f087a01b41776e7 "pdflatex"
   (generated)
   "CUDA_IMPLEMENTATION_REPORT.aux"
   "CUDA_IMPLEMENTATION_REPORT.log"

@@ -7,7 +7,7 @@
 \geometry{margin=2.5cm}
 \usepackage{hyperref}
 
-\title{Derivazione della InfoNCE Loss}
+\title{InfoNCE Loss Derivation}
 \author{}
 \date{}
 
@@ -15,58 +15,58 @@
 
 \maketitle
 
-\section*{Introduzione}
-Questa relazione fornisce una derivazione dettagliata del gradiente della InfoNCE loss rispetto ai vettori di feature $Z$. La perdita InfoNCE è utilizzata nei metodi di \emph{self-supervised learning} contrastivo per avvicinare coppie di esempi "positivi" e allontanare esempi "negativi" nello spazio delle rappresentazioni.
+\section*{Introduction}
+This document provides a detailed derivation of the InfoNCE loss gradient with respect to the feature vectors $Z$. The InfoNCE loss is used in contrastive \emph{self-supervised learning} methods to bring "positive" example pairs closer together and push "negative" examples apart in the representation space.
 
-\section{Definizione della perdita}
-Siano $N=2B$ il numero totale di vettori di feature e $Z=\{Z_1, Z_2, \dots, Z_N\}$ con $Z_i\in\mathbb{R}^d$ e $\|Z_i\|_2=1$. Si definiscono:
+\section{Loss definition}
+Let $N=2B$ be the total number of feature vectors and $Z=\{Z_1, Z_2, \dots, Z_N\}$ with $Z_i\in\mathbb{R}^d$ and $\|Z_i\|_2=1$. We define:
 \begin{align*}
 L_{ij} &= \frac{1}{\tau} \, Z_i \cdot Z_j, \\
 P_{ij} &= \frac{\exp(L_{ij})}{\sum_{k=1}^{N} \exp(L_{ik})}, \\
 \mathcal{L} &= -\frac{1}{N} \sum_{i=1}^{N} \log P_{i, p(i)},
 \end{align*}
-ove $p(i)=(i+B)\bmod N$ identifica l'indice del campione positivo per ogni riga $i$.
+where $p(i)=(i+B)\bmod N$ identifies the index of the positive sample for each row $i$.
 
-\section{Derivata rispetto ai logits}
-Per ciascuna riga $i$ si considera
+\section{Derivative with respect to logits}
+For each row $i$ we consider
 \[
 \ell_i = -\log P_{i,p(i)}
 \]
-La derivata di $\ell_i$ rispetto a $L_{ij}$, applicando la cross-entropy sulla softmax, è:
+The derivative of $\ell_i$ with respect to $L_{ij}$, applying cross-entropy on softmax, is:
 \[
 \frac{\partial \ell_i}{\partial L_{ij}} = P_{ij} - \begin{cases}1 & j = p(i), \\ 0 & j \neq p(i).\end{cases}
 \]
-Poiché $\mathcal{L}=\frac{1}{N}\sum_i \ell_i$, allora
+Since $\mathcal{L}=\frac{1}{N}\sum_i \ell_i$, then
 \[
 \frac{\partial \mathcal{L}}{\partial L_{ij}} = \frac{1}{N}\bigl(P_{ij} - \mathbb{1}_{j=p(i)}\bigr).
 \]
 
-\section{Derivata dei logits rispetto a $Z$}
-Ricordando $L_{ij}=\tfrac{1}{\tau} Z_i \cdot Z_j$, si ha per ogni componente vettoriale $Z_k$:
+\section{Derivative of logits with respect to Z}
+Remembering $L_{ij}=\tfrac{1}{\tau} Z_i \cdot Z_j$, for each vector component $Z_k$ we have:
 \[
 \frac{\partial L_{ij}}{\partial Z_k} = \frac{1}{\tau}(\delta_{ik} Z_j + \delta_{jk} Z_i),
 \]
-dove $\delta_{ik}$ è il delta di Kronecker.
+where $\delta_{ik}$ is the Kronecker delta.
 
-\section{Catena di derivazione finale}
-Applicando la regola della catena:
+\section{Final derivation chain}
+Applying the chain rule:
 \[
 \frac{\partial \mathcal{L}}{\partial Z_k} = \sum_{i,j} \frac{\partial \mathcal{L}}{\partial L_{ij}} \, \frac{\partial L_{ij}}{\partial Z_k}.
 \]
-Separando i contributi e definendo la matrice $G$ con
+Separating the contributions and defining matrix $G$ with
 \[
 G_{ij} = P_{ij} - \mathbb{1}_{j=p(i)},
 \]
-si ottiene:
+we obtain:
 \[
 \frac{\partial \mathcal{L}}{\partial Z_k} = \frac{1}{N \tau} \Bigl(\sum_{j} G_{kj} Z_j + \sum_{i} G_{ik} Z_i\Bigr).
 \]
-In forma compatta:
+In compact form:
 \[
 \nabla_Z \mathcal{L} = \frac{1}{N \tau} (G + G^T) Z.
 \]
 
-\section*{Conclusioni}
-La derivazione mostra come il gradiente della InfoNCE loss sia ottenuto dalla combinazione delle probabilità softmax corrette dai marcatori dei positivi, moltiplicata per la matrice delle feature. Il termine simmetrico $(G+G^T)$ garantisce che ogni coppia di feature contribuisca in modo reciproco alla spinta verso i positivi e all'allontanamento dai negativi.
+\section*{Conclusions}
+The derivation shows how the InfoNCE loss gradient is obtained from the combination of softmax probabilities corrected by positive markers, multiplied by the feature matrix. The symmetric term $(G+G^T)$ ensures that each feature pair contributes reciprocally to pushing toward positives and away from negatives.
 
 \end{document}

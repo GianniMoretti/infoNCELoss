@@ -11,7 +11,7 @@
 \usepackage{graphicx}
 \usepackage{float}
 
-% Configurazione per il codice CUDA
+% CUDA Configuration
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
@@ -42,7 +42,7 @@
 \lstset{style=cudastyle}
 
 \title{InfoNCE CUDA Implementation\\Technical Report}
-\author{Implementazione CUDA per InfoNCE Loss}
+\author{CUDA Implementation for InfoNCE Loss}
 \date{\today}
 
 \begin{document}
@@ -52,34 +52,34 @@
 \tableofcontents
 \newpage
 
-\section{Introduzione}
+\section{Introduction}
 
-Questo report documenta l'implementazione CUDA della InfoNCE (Information Noise-Contrastive Estimation) loss, una funzione di perdita fondamentale nel self-supervised learning contrastivo. L'implementazione è stata progettata per processare efficientemente batch completi di features su GPU, seguendo esattamente la derivazione matematica presentata nel documento teorico.
+This report documents the CUDA implementation of InfoNCE (Information Noise-Contrastive Estimation) loss, a fundamental loss function in contrastive self-supervised learning. The implementation has been designed to efficiently process complete batches of features on GPU, following exactly the mathematical derivation presented in the theoretical document.
 
-\subsection{Obiettivi dell'Implementazione}
+\subsection{Implementation Objectives}
 
 \begin{itemize}
-    \item \textbf{Efficienza}: Sfruttare il parallelismo massivo delle GPU moderne
-    \item \textbf{Correttezza}: Replicare esattamente il comportamento del codice PyTorch di riferimento
-    \item \textbf{Integrazione}: Supporto completo per l'autograd di PyTorch
-    \item \textbf{Scalabilità}: Gestire batch di dimensioni variabili in modo efficiente
+    \item \textbf{Efficiency}: Leverage massive parallelism of modern GPUs
+    \item \textbf{Correctness}: Exactly replicate the behavior of the reference PyTorch code
+    \item \textbf{Integration}: Complete support for PyTorch autograd
+    \item \textbf{Scalability}: Handle batches of variable sizes efficiently
 \end{itemize}
 
-\subsection{Architettura dell'Implementazione}
+\subsection{Implementation Architecture}
 
-L'implementazione si compone di quattro kernel CUDA principali:
+The implementation consists of four main CUDA kernels:
 \begin{enumerate}
-    \item \texttt{similarity\_matrix\_kernel}: Calcolo della matrice di similarità
-    \item \texttt{infonce\_forward\_backward\_kernel}: Calcolo della loss e dei gradienti logits
-    \item \texttt{features\_gradient\_kernel}: Calcolo dei gradienti rispetto alle features
-    \item \texttt{l2\_normalize\_kernel}: Normalizzazione L2 (attualmente non utilizzato)
+    \item \texttt{similarity\_matrix\_kernel}: Similarity matrix calculation
+    \item \texttt{infonce\_forward\_backward\_kernel}: Loss and logits gradient calculation
+    \item \texttt{features\_gradient\_kernel}: Gradient calculation with respect to features
+    \item \texttt{l2\_normalize\_kernel}: L2 normalization (currently not used)
 \end{enumerate}
 
-\section{Analisi Dettagliata dei Kernel CUDA}
+\section{Detailed Analysis of CUDA Kernels}
 
-\subsection{Kernel per la Matrice di Similarità}
+\subsection{Similarity Matrix Kernel}
 
-\begin{lstlisting}[caption={Kernel per il calcolo della matrice di similarità}]
+\begin{lstlisting}[caption={Kernel for similarity matrix calculation}]
 __global__ void similarity_matrix_kernel(const float* features, 
                                         float* similarity_matrix, 
                                         int batch_size, int feature_dim, 
@@ -90,13 +90,13 @@ __global__ void similarity_matrix_kernel(const float* features,
     if (i < batch_size && j < batch_size) {
         float dot_product = 0.0f;
         
-        // Calcola dot product tra features[i] e features[j]
+        // Calculate dot product between features[i] and features[j]
         for (int d = 0; d < feature_dim; d++) {
             dot_product += features[i * feature_dim + d] * 
                           features[j * feature_dim + d];
         }
         
-        // Applica temperatura e maschera la diagonale
+        // Apply temperature and mask diagonal
         if (i == j) {
             similarity_matrix[i * batch_size + j] = -INFINITY;
         } else {
@@ -106,32 +106,32 @@ __global__ void similarity_matrix_kernel(const float* features,
 }
 \end{lstlisting}
 
-\subsubsection{Analisi Tecnica}
+\subsubsection{Technical Analysis}
 
-\paragraph{Organizzazione dei Thread:}
+\paragraph{Thread Organization:}
 \begin{itemize}
-    \item \textbf{Grid 2D}: \texttt{dim3 grid\_sim((batch\_size + 15) / 16, (batch\_size + 15) / 16)}
-    \item \textbf{Block 2D}: \texttt{dim3 block\_sim(16, 16)} = 256 thread per block
-    \item \textbf{Mapping}: Thread \((t_x, t_y)\) processa elemento \((i, j)\) della matrice
+    \item \textbf{2D Grid}: \texttt{dim3 grid\_sim((batch\_size + 15) / 16, (batch\_size + 15) / 16)}
+    \item \textbf{2D Block}: \texttt{dim3 block\_sim(16, 16)} = 256 threads per block
+    \item \textbf{Mapping}: Thread \((t_x, t_y)\) processes element \((i, j)\) of the matrix
 \end{itemize}
 
-\paragraph{Accesso alla Memoria:}
+\paragraph{Memory Access:}
 \begin{itemize}
-    \item \textbf{Features}: Accesso con pattern \texttt{features[i * feature\_dim + d]}
-    \item \textbf{Coalescing}: Gli accessi alla memoria sono parzialmente coalescenti per \texttt{i} consecutivi
-    \item \textbf{Cache L1}: Sfrutta la cache per riutilizzare \texttt{features[i]} lungo le diverse \texttt{j}
+    \item \textbf{Features}: Access with pattern \texttt{features[i * feature\_dim + d]}
+    \item \textbf{Coalescing}: Memory accesses are partially coalesced for consecutive \texttt{i}
+    \item \textbf{L1 Cache}: Exploits cache to reuse \texttt{features[i]} across different \texttt{j}
 \end{itemize}
 
-\paragraph{Complessità Computazionale:}
+\paragraph{Computational Complexity:}
 \begin{itemize}
-    \item \textbf{Per elemento}: $O(D)$ dove $D$ è \texttt{feature\_dim}
-    \item \textbf{Totale}: $O(N^2 \cdot D)$ dove $N$ è \texttt{batch\_size}
-    \item \textbf{Parallelizzazione}: $N^2$ thread operano in parallelo
+    \item \textbf{Per element}: $O(D)$ where $D$ is \texttt{feature\_dim}
+    \item \textbf{Total}: $O(N^2 \cdot D)$ where $N$ is \texttt{batch\_size}
+    \item \textbf{Parallelization}: $N^2$ threads operate in parallel
 \end{itemize}
 
-\subsection{Kernel per Loss e Gradienti Logits}
+\subsection{Kernel for Loss and Logits Gradients}
 
-\begin{lstlisting}[caption={Kernel per calcolo loss e gradienti}]
+\begin{lstlisting}[caption={Kernel for loss and gradient calculation}]
 __global__ void infonce_forward_backward_kernel(
     const float* similarity_matrix, const int* labels,
     float* loss, float* grad_matrix, int batch_size) {
@@ -139,7 +139,7 @@ __global__ void infonce_forward_backward_kernel(
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     
     if (i < batch_size) {
-        // Calcola softmax numericamente stabile
+        // Calculate numerically stable softmax
         float max_val = -INFINITY;
         for (int j = 0; j < batch_size; j++) {
             float val = similarity_matrix[i * batch_size + j];
@@ -156,15 +156,15 @@ __global__ void infonce_forward_backward_kernel(
             }
         }
         
-        // Calcola la loss per questa riga
+        // Calculate loss for this row
         int positive_idx = labels[i];
         float positive_logit = similarity_matrix[i * batch_size + positive_idx];
         float log_prob = (positive_logit - max_val) - logf(sum_exp);
         
-        // Accumula la loss usando atomic add
+        // Accumulate loss using atomic add
         atomicAdd(loss, -log_prob / batch_size);
         
-        // Calcola il gradiente: P_ij - 1_{j=p(i)}
+        // Calculate gradient: P_ij - 1_{j=p(i)}
         for (int j = 0; j < batch_size; j++) {
             float val = similarity_matrix[i * batch_size + j];
             if (val != -INFINITY) {
@@ -179,33 +179,33 @@ __global__ void infonce_forward_backward_kernel(
 }
 \end{lstlisting}
 
-\subsubsection{Analisi Tecnica}
+\subsubsection{Technical Analysis}
 
-\paragraph{Stabilità Numerica:}
-Il kernel implementa il softmax numericamente stabile utilizzando la tecnica del \emph{log-sum-exp}:
+\paragraph{Numerical Stability:}
+The kernel implements numerically stable softmax using the \emph{log-sum-exp} technique:
 \begin{align}
 \text{softmax}(x_i) &= \frac{e^{x_i}}{\sum_j e^{x_j}} \\
 &= \frac{e^{x_i - \max(x)} \cdot e^{\max(x)}}{\sum_j e^{x_j - \max(x)} \cdot e^{\max(x)}} \\
 &= \frac{e^{x_i - \max(x)}}{\sum_j e^{x_j - \max(x)}}
 \end{align}
 
-\paragraph{Parallelizzazione:}
+\paragraph{Parallelization:}
 \begin{itemize}
-    \item \textbf{Un thread per riga}: Ogni thread processa una riga della matrice di similarità
-    \item \textbf{Sequenziale per colonna}: Il loop su \texttt{j} è sequenziale (necessario per softmax)
-    \item \textbf{Atomic Operations}: \texttt{atomicAdd} per accumulare la loss globale
+    \item \textbf{One thread per row}: Each thread processes one row of the similarity matrix
+    \item \textbf{Sequential per column}: The loop over \texttt{j} is sequential (necessary for softmax)
+    \item \textbf{Atomic Operations}: \texttt{atomicAdd} to accumulate global loss
 \end{itemize}
 
-\paragraph{Calcolo dei Gradienti:}
-Il gradiente della cross-entropy rispetto ai logits è:
+\paragraph{Gradient Calculation:}
+The cross-entropy gradient with respect to logits is:
 \begin{equation}
 \frac{\partial \mathcal{L}}{\partial L_{ij}} = \frac{1}{N}(P_{ij} - \mathbb{1}_{j=p(i)})
 \end{equation}
-dove $P_{ij}$ è la probabilità softmax e $p(i)$ è l'indice del campione positivo.
+where $P_{ij}$ is the softmax probability and $p(i)$ is the positive sample index.
 
-\subsection{Kernel per Gradienti delle Features}
+\subsection{Kernel for Feature Gradients}
 
-\begin{lstlisting}[caption={Kernel per calcolo gradienti features}]
+\begin{lstlisting}[caption={Kernel for feature gradient calculation}]
 __global__ void features_gradient_kernel(const float* grad_matrix, 
                                         const float* features,
                                         float* grad_features, 
@@ -217,7 +217,7 @@ __global__ void features_gradient_kernel(const float* grad_matrix,
     if (i < batch_size && d < feature_dim) {
         float grad_sum = 0.0f;
         
-        // Calcola (G + G^T) * Z come nella derivazione matematica
+        // Calculate (G + G^T) * Z as in mathematical derivation
         for (int j = 0; j < batch_size; j++) {
             float g_ij = grad_matrix[i * batch_size + j];
             float g_ji = grad_matrix[j * batch_size + i];
@@ -231,35 +231,35 @@ __global__ void features_gradient_kernel(const float* grad_matrix,
 }
 \end{lstlisting}
 
-\subsubsection{Derivazione Matematica}
+\subsubsection{Mathematical Derivation}
 
-Dalla derivazione teorica, il gradiente rispetto alle features è:
+From the theoretical derivation, the gradient with respect to features is:
 \begin{equation}
 \nabla_Z \mathcal{L} = \frac{1}{N \tau} (G + G^T) Z
 \end{equation}
 
-dove:
+where:
 \begin{itemize}
-    \item $G_{ij} = P_{ij} - \mathbb{1}_{j=p(i)}$ è la matrice dei gradienti logits
-    \item $Z$ è la matrice delle features
-    \item $\tau$ è la temperatura
-    \item $N$ è la dimensione del batch
+    \item $G_{ij} = P_{ij} - \mathbb{1}_{j=p(i)}$ is the logits gradient matrix
+    \item $Z$ is the feature matrix
+    \item $\tau$ is the temperature
+    \item $N$ is the batch size
 \end{itemize}
 
-\paragraph{Parallelizzazione 2D:}
+\paragraph{2D Parallelization:}
 \begin{itemize}
-    \item \textbf{Grid 2D}: \texttt{dim3 grid((batch\_size + 15) / 16, (feature\_dim + 15) / 16)}
-    \item \textbf{Thread Mapping}: Thread \((t_x, t_y)\) calcola \texttt{grad\_features[i][d]}
-    \item \textbf{Scalabilità}: Ottimale per features con molte dimensioni
+    \item \textbf{2D Grid}: \texttt{dim3 grid((batch\_size + 15) / 16, (feature\_dim + 15) / 16)}
+    \item \textbf{Thread Mapping}: Thread \((t_x, t_y)\) calculates \texttt{grad\_features[i][d]}
+    \item \textbf{Scalability}: Optimal for features with many dimensions
 \end{itemize}
 
-\section{Funzioni di Interfaccia C++}
+\section{C++ Interface Functions}
 
-\subsection{Funzione Forward}
+\subsection{Forward Function}
 
-\begin{lstlisting}[caption={Funzione forward C++}]
+\begin{lstlisting}[caption={C++ forward function}]
 torch::Tensor infonce_cuda_forward(torch::Tensor features, float temperature) {
-    // Validazione input e setup
+    // Input validation and setup
     features = features.contiguous();
     if (!features.is_cuda()) features = features.cuda();
     if (features.dtype() != torch::kFloat) features = features.to(torch::kFloat);
@@ -273,14 +273,14 @@ torch::Tensor infonce_cuda_forward(torch::Tensor features, float temperature) {
     
     int B = batch_size / 2;
     
-    // Creazione tensori output
+    // Create output tensors
     auto similarity_matrix = torch::empty({batch_size, batch_size}, 
                                         torch::TensorOptions().dtype(torch::kFloat)
                                                               .device(features.device()));
     auto loss = torch::zeros({1}, torch::TensorOptions().dtype(torch::kFloat)
                                                         .device(features.device()));
     
-    // Configurazione labels: i -> i+B, i+B -> i
+    // Label configuration: i -> i+B, i+B -> i
     auto labels = torch::empty({batch_size}, torch::TensorOptions().dtype(torch::kInt)
                                                                    .device(features.device()));
     std::vector<int> labels_cpu(batch_size);
@@ -291,7 +291,7 @@ torch::Tensor infonce_cuda_forward(torch::Tensor features, float temperature) {
     cudaMemcpy(labels.data_ptr<int>(), labels_cpu.data(), 
                batch_size * sizeof(int), cudaMemcpyHostToDevice);
     
-    // Lancio dei kernel
+    // Kernel launches
     // ... (kernel launches)
     
     cudaDeviceSynchronize();
@@ -299,55 +299,55 @@ torch::Tensor infonce_cuda_forward(torch::Tensor features, float temperature) {
 }
 \end{lstlisting}
 
-\subsubsection{Gestione della Memoria}
+\subsubsection{Memory Management}
 
 \paragraph{Tensor Management:}
 \begin{itemize}
-    \item \textbf{Contiguità}: Assicura layout contiguo per accessi efficienti
-    \item \textbf{Device Placement}: Sposta automaticamente tensori su GPU
-    \item \textbf{Type Consistency}: Conversione automatica a \texttt{float32}
+    \item \textbf{Contiguity}: Ensures contiguous layout for efficient access
+    \item \textbf{Device Placement}: Automatically moves tensors to GPU
+    \item \textbf{Type Consistency}: Automatic conversion to \texttt{float32}
 \end{itemize}
 
 \paragraph{Labels Configuration:}
-La configurazione delle labels implementa la struttura delle coppie positive:
+The label configuration implements the positive pair structure:
 \begin{itemize}
-    \item Campioni \texttt{0...B-1} hanno positivi in \texttt{B...2B-1}
-    \item Campioni \texttt{B...2B-1} hanno positivi in \texttt{0...B-1}
-    \item Questa configurazione replica esattamente il comportamento del codice PyTorch di riferimento
+    \item Samples \texttt{0...B-1} have positives in \texttt{B...2B-1}
+    \item Samples \texttt{B...2B-1} have positives in \texttt{0...B-1}
+    \item This configuration exactly replicates the behavior of the reference PyTorch code
 \end{itemize}
 
-\subsection{Funzione Backward}
+\subsection{Backward Function}
 
-La funzione backward segue la stessa struttura del forward ma calcola i gradienti:
+The backward function follows the same structure as forward but calculates gradients:
 
 \begin{enumerate}
-    \item \textbf{Ricalcolo Forward}: Ricalcola similarità e gradienti logits
-    \item \textbf{Gradiente Features}: Applica la formula $(G + G^T) Z / \tau$
-    \item \textbf{Chain Rule}: Moltiplica per \texttt{grad\_output} ricevuto
+    \item \textbf{Forward Recalculation}: Recalculates similarity and logits gradients
+    \item \textbf{Feature Gradients}: Applies the formula $(G + G^T) Z / \tau$
+    \item \textbf{Chain Rule}: Multiplies by received \texttt{grad\_output}
 \end{enumerate}
 
-\section{Ottimizzazioni e Considerazioni delle Prestazioni}
+\section{Optimizations and Performance Considerations}
 
-\subsection{Ottimizzazioni Implementate}
+\subsection{Implemented Optimizations}
 
 \paragraph{Memory Coalescing:}
 \begin{itemize}
-    \item Accessi consecutivi alla memoria per thread adiacenti
-    \item Layout row-major per matrici per massimizzare il coalescing
-    \item Utilizzo di shared memory dove appropriato
+    \item Consecutive memory access for adjacent threads
+    \item Row-major layout for matrices to maximize coalescing
+    \item Use of shared memory where appropriate
 \end{itemize}
 
 \paragraph{Occupancy:}
 \begin{itemize}
-    \item Block size 16x16 = 256 thread per block (ottimale per SM moderni)
-    \item Bilanciamento tra parallelismo e utilizzo delle risorse
-    \item Minimizzazione dei registri per thread
+    \item Block size 16x16 = 256 threads per block (optimal for modern SMs)
+    \item Balance between parallelism and resource utilization
+    \item Minimization of registers per thread
 \end{itemize}
 
-\subsection{Analisi delle Prestazioni}
+\subsection{Performance Analysis}
 
-\paragraph{Risultati dei Benchmark:}
-Dai test effettuati:
+\paragraph{Benchmark Results:}
+From conducted tests:
 \begin{itemize}
     \item \textbf{Correttezza}: Differenze < 1e-5 nella loss vs PyTorch
     \item \textbf{Gradienti}: Differenze < 1e-4 nei gradienti
@@ -357,15 +357,15 @@ Dai test effettuati:
 \paragraph{Bottleneck Analysis:}
 \begin{itemize}
     \item \textbf{Memory Bandwidth}: Limitato dagli accessi alla memoria globale
-    \item \textbf{Atomic Operations}: \texttt{atomicAdd} può creare contention per batch piccoli
-    \item \textbf{Divergence}: Minimal warp divergence nei kernel implementati
+    \item \textbf{Atomic Operations}: \texttt{atomicAdd} can create contention for small batches
+    \item \textbf{Divergence}: Minimal warp divergence in implemented kernels
 \end{itemize}
 
-\section{Integrazione con PyTorch}
+\section{PyTorch Integration}
 
 \subsection{Autograd Function}
 
-\begin{lstlisting}[caption={Integrazione autograd},language=Python]
+\begin{lstlisting}[caption={Autograd integration},language=Python]
 class InfoNCEFunction(Function):
     @staticmethod
     def forward(ctx, features, temperature):
@@ -393,90 +393,90 @@ class InfoNCELoss(nn.Module):
 
     def forward(self, features):
         # features shape: (2*batch_size, feature_dim)
-        # DEVE essere già normalizzato L2
+        # MUST be already L2 normalized
         return InfoNCEFunction.apply(features, self.temperature)
 \end{lstlisting}
 
-\section{Validazione e Testing}
+\section{Validation and Testing}
 
-\subsection{Test di Correttezza}
+\subsection{Correctness Tests}
 
-\paragraph{Metodologia:}
+\paragraph{Methodology:}
 \begin{enumerate}
-    \item Generazione di features casuali normalizzate
-    \item Confronto con implementazione PyTorch di riferimento
-    \item Verifica di loss e gradienti con tolleranze appropriate
-    \item Test su diverse dimensioni di batch
+    \item Generation of random normalized features
+    \item Comparison with reference PyTorch implementation
+    \item Verification of loss and gradients with appropriate tolerances
+    \item Testing on different batch sizes
 \end{enumerate}
 
-\paragraph{Risultati:}
+\paragraph{Results:}
 \begin{itemize}
-    \item \textbf{Loss Accuracy}: Tutte le differenze < 1e-5
-    \item \textbf{Gradient Accuracy}: Tutte le differenze < 1e-4
-    \item \textbf{Batch Sizes}: Testato da 4 a 128 campioni
-    \item \textbf{Feature Dimensions}: Testato da 64 a 2048 dimensioni
+    \item \textbf{Loss Accuracy}: All differences < 1e-5
+    \item \textbf{Gradient Accuracy}: All differences < 1e-4
+    \item \textbf{Batch Sizes}: Tested from 4 to 128 samples
+    \item \textbf{Feature Dimensions}: Tested from 64 to 2048 dimensions
 \end{itemize}
 
-\subsection{Analisi degli Errori Numerici}
+\subsection{Numerical Error Analysis}
 
-\paragraph{Fonti di Errore:}
+\paragraph{Error Sources:}
 \begin{itemize}
-    \item \textbf{Floating Point Precision}: Errori di arrotondamento IEEE 754
-    \item \textbf{Atomic Operations}: Ordine non deterministico di accumulo
-    \item \textbf{Function Libraries}: Piccole differenze in \texttt{expf}, \texttt{logf}
-    \item \textbf{Reduction Order}: Diverse sequenze di riduzione
+    \item \textbf{Floating Point Precision}: IEEE 754 rounding errors
+    \item \textbf{Atomic Operations}: Non-deterministic accumulation order
+    \item \textbf{Function Libraries}: Small differences in \texttt{expf}, \texttt{logf}
+    \item \textbf{Reduction Order}: Different reduction sequences
 \end{itemize}
 
-\paragraph{Mitigazioni:}
+\paragraph{Mitigations:}
 \begin{itemize}
-    \item Softmax numericamente stabile con log-sum-exp
-    \item Uso di \texttt{float} invece di \texttt{half} per precisione
-    \item Tolleranze appropriate nei test (1e-5 per loss, 1e-4 per gradienti)
+    \item Numerically stable softmax with log-sum-exp
+    \item Use of \texttt{float} instead of \texttt{half} for precision
+    \item Appropriate tolerances in tests (1e-5 for loss, 1e-4 for gradients)
 \end{itemize}
 
-\section{Confronto con Implementazioni Alternative}
+\section{Comparison with Alternative Implementations}
 
 \subsection{PyTorch Built-in}
 
-\paragraph{Vantaggi dell'implementazione CUDA:}
+\paragraph{Advantages of CUDA implementation:}
 \begin{itemize}
-    \item \textbf{Specializzazione}: Ottimizzata specificamente per InfoNCE
-    \item \textbf{Memory Layout}: Controllo diretto sull'organizzazione della memoria
-    \item \textbf{Kernel Fusion}: Meno kernel launch overhead
+    \item \textbf{Specialization}: Optimized specifically for InfoNCE
+    \item \textbf{Memory Layout}: Direct control over memory organization
+    \item \textbf{Kernel Fusion}: Less kernel launch overhead
 \end{itemize}
 
-\paragraph{Svantaggi:}
+\paragraph{Disadvantages:}
 \begin{itemize}
-    \item \textbf{Manutenzione}: Codice più complesso da mantenere
-    \item \textbf{Portabilità}: Legato all'architettura CUDA
-    \item \textbf{Debugging}: Più difficile debuggare rispetto a PyTorch puro
+    \item \textbf{Maintenance}: More complex code to maintain
+    \item \textbf{Portability}: Tied to CUDA architecture
+    \item \textbf{Debugging}: More difficult to debug compared to pure PyTorch
 \end{itemize}
 
-\subsection{Altre Implementazioni Contrastive}
+\subsection{Other Contrastive Implementations}
 
-L'implementazione fornisce una base solida per estensioni:
+The implementation provides a solid foundation for extensions:
 \begin{itemize}
-    \item \textbf{SimCLR}: Può essere facilmente adattata
-    \item \textbf{MoCo}: Richiede modifiche per momentum encoding
-    \item \textbf{SwAV}: Necessita clustering aggiuntivo
+    \item \textbf{SimCLR}: Can be easily adapted
+    \item \textbf{MoCo}: Requires modifications for momentum encoding
+    \item \textbf{SwAV}: Needs additional clustering
 \end{itemize}
 
-\section{Conclusioni e Sviluppi Futuri}
+\section{Conclusions and Future Developments}
 
-\subsection{Risultati Ottenuti}
+\subsection{Achieved Results}
 
-L'implementazione CUDA della InfoNCE loss è stata completata con successo:
+The CUDA implementation of InfoNCE loss has been successfully completed:
 
 \begin{itemize}
-    \item \textbf{Correttezza Verificata}: Risultati identici a PyTorch con precisione numerica appropriata
-    \item \textbf{Performance Competitive}: Prestazioni comparabili alle implementazioni ottimizzate
-    \item \textbf{Integrazione Completa}: Supporto completo per autograd e training
-    \item \textbf{Scalabilità}: Gestisce efficientemente batch di dimensioni variabili
+    \item \textbf{Verified Correctness}: Results identical to PyTorch with appropriate numerical precision
+    \item \textbf{Competitive Performance}: Performance comparable to optimized implementations
+    \item \textbf{Complete Integration}: Full support for autograd and training
+    \item \textbf{Scalability}: Efficiently handles batches of variable sizes
 \end{itemize}
 
-\subsection{Possibili Miglioramenti}
+\subsection{Possible Improvements}
 
-\paragraph{Ottimizzazioni Avanzate:}
+\paragraph{Advanced Optimizations:}
 \begin{itemize}
     \item \textbf{Shared Memory}: Utilizzare shared memory per ridurre accessi alla memoria globale
     \item \textbf{Tensor Cores}: Sfruttare Tensor Cores per operazioni su precision mista
@@ -504,7 +504,7 @@ Questa implementazione può essere utilizzata in:
 
 \section{Appendici}
 
-\subsection{Appendice A: Configurazioni CUDA Ottimali}
+\subsection{Appendix A: Optimal CUDA Configurations}
 
 \begin{table}[H]
 \centering
@@ -517,10 +517,10 @@ forward\_backward & (256, 1) & $(\lceil N/256 \rceil, 1)$ \\
 features\_gradient & (16, 16) & $(\lceil N/16 \rceil, \lceil D/16 \rceil)$ \\
 \hline
 \end{tabular}
-\caption{Configurazioni ottimali per diversi kernel}
+\caption{Optimal configurations for different kernels}
 \end{table}
 
-\subsection{Appendice B: Profiling delle Prestazioni}
+\subsection{Appendix B: Performance Profiling}
 
 \begin{table}[H]
 \centering
@@ -534,17 +534,17 @@ features\_gradient & (16, 16) & $(\lceil N/16 \rceil, \lceil D/16 \rceil)$ \\
 256 & 2048 & 0.89 & 0.52 \\
 \hline
 \end{tabular}
-\caption{Confronto prestazioni per diverse configurazioni}
+\caption{Performance comparison for different configurations}
 \end{table}
 
-\subsection{Appendice C: Codice Completo}
+\subsection{Appendix C: Complete Code}
 
-Il codice completo dell'implementazione è disponibile nei file:
+The complete implementation code is available in the files:
 \begin{itemize}
-    \item \texttt{infonce\_cuda.cu}: Kernel CUDA e funzioni C++
-    \item \texttt{infonce\_cuda\_wrapp.cpp}: Wrapper PyBind11
-    \item \texttt{infonce\_cuda\_module.py}: Interfaccia PyTorch
-    \item \texttt{test\_new\_implementation.py}: Suite di test
+    \item \texttt{infonce\_cuda.cu}: CUDA kernels and C++ functions
+    \item \texttt{infonce\_cuda\_wrapp.cpp}: PyBind11 wrapper
+    \item \texttt{infonce\_cuda\_module.py}: PyTorch interface
+    \item \texttt{test\_new\_implementation.py}: Test suite
 \end{itemize}
 
 \bibliographystyle{plain}
