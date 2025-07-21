@@ -63,13 +63,16 @@ __global__ void create_labels_kernel(int* labels, int batch_size, int B) {
     }
 }
 
-// CUDA kernel to compute similarity matrix (dot product) - CUSTOM IMPLEMENTATION
+// CUDA kernel to compute similarity matrix (dot product)
 __global__ void similarity_matrix_kernel(const float* features, float* similarity_matrix, 
                                         int batch_size, int feature_dim, float temperature) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    int j = blockIdx.y * blockDim.y + threadIdx.y;
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int total_elements = batch_size * batch_size;
     
-    if (i < batch_size && j < batch_size) {
+    if (tid < total_elements) {
+        int i = tid / batch_size;
+        int j = tid % batch_size;
+        
         float dot_product = 0.0f;
         
         // Calculate dot product between features[i] and features[j]
@@ -79,9 +82,9 @@ __global__ void similarity_matrix_kernel(const float* features, float* similarit
         
         // Apply temperature and mask diagonal
         if (i == j) {
-            similarity_matrix[i * batch_size + j] = -INFINITY;  // Mask diagonal
+            similarity_matrix[tid] = -INFINITY;  // Mask diagonal
         } else {
-            similarity_matrix[i * batch_size + j] = dot_product / temperature;
+            similarity_matrix[tid] = dot_product / temperature;
         }
     }
 }
@@ -124,7 +127,7 @@ __global__ void infonce_forward_kernel(const float* similarity_matrix, const int
             }
         }
         
-        // OPTIMIZATION: Save max_val and sum_exp for backward pass
+        //Save max_val and sum_exp for backward pass
         max_vals[i] = max_val;
         sum_exps[i] = sum_exp;
         
@@ -146,36 +149,38 @@ __global__ void infonce_forward_kernel(const float* similarity_matrix, const int
             block_loss += shared_loss[i];
         }
         atomicAdd(loss, block_loss);
-    }
-    
+    } 
 }
 
 __global__ void infonce_backward_kernel(const float* similarity_matrix, const int* labels,
                                                     const float* max_vals, const float* sum_exps,
                                                     float* grad_matrix, int batch_size) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int total_elements = batch_size * batch_size;
     
-    if (i < batch_size) {
+    if (tid < total_elements) {
+        int i = tid / batch_size;
+        int j = tid % batch_size;
+        
         // Use pre-computed values from forward pass
         float max_val = max_vals[i];
         float sum_exp = sum_exps[i];
         
         // Calculate gradient: P_ij - 1_{j=p(i)}
         int positive_idx = labels[i];
-        for (int j = 0; j < batch_size; j++) {
-            float val = similarity_matrix[i * batch_size + j];
-            if (val != -INFINITY) {
-                float prob = expf(val - max_val) / sum_exp;
-                float grad_val = prob - (j == positive_idx ? 1.0f : 0.0f);
-                grad_matrix[i * batch_size + j] = grad_val / batch_size;
-            } else {
-                grad_matrix[i * batch_size + j] = 0.0f;
-            }
+        float val = similarity_matrix[tid];
+        
+        if (val != -INFINITY) {
+            float prob = expf(val - max_val) / sum_exp;
+            float grad_val = prob - (j == positive_idx ? 1.0f : 0.0f);
+            grad_matrix[tid] = grad_val / batch_size;
+        } else {
+            grad_matrix[tid] = 0.0f;
         }
     }
 }
 
-//CUDA kernel to compute gradient with respect to features - ORIGINAL VERSION
+//CUDA kernel to compute gradient with respect to features - COALESCED VERSION (NO CACHING)
 __global__ void features_gradient_kernel(
     const float* grad_matrix, const float* features,
     float* grad_features, int batch_size, int feature_dim,
@@ -187,7 +192,6 @@ __global__ void features_gradient_kernel(
     if (i < batch_size && d < feature_dim) {
         float grad_sum = 0.0f;
         
-        // Calculate (G + G^T) * Z as in the mathematical derivation
         for (int j = 0; j < batch_size; j++) {
             float g_ij = grad_matrix[i * batch_size + j];
             float g_ji = grad_matrix[j * batch_size + i];
@@ -196,6 +200,7 @@ __global__ void features_gradient_kernel(
             grad_sum += (g_ij + g_ji) * z_j;
         }
         
+        // Coalesced write: threads with consecutive (i,d) write to consecutive memory
         grad_features[i * feature_dim + d] = grad_sum / temperature;
     }
 }
@@ -248,8 +253,8 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
         similarity_matrix = torch::empty({batch_size, batch_size}, torch::TensorOptions().dtype(torch::kFloat).device(features.device()));
         
         // Calculate similarity matrix USING CUSTOM KERNEL
-        dim3 block_sim = calculate_optimal_block_size_2d(batch_size, batch_size);
-        dim3 grid_sim = calculate_grid_size_2d(batch_size, batch_size, block_sim);
+        dim3 block_sim(calculate_optimal_block_size_1d(batch_size * batch_size), 1);
+        dim3 grid_sim(calculate_grid_size_1d(batch_size * batch_size, block_sim.x), 1);
         
         similarity_matrix_kernel<<<grid_sim, block_sim>>>(
             features.data_ptr<float>(),
@@ -333,8 +338,8 @@ torch::Tensor infonce_cuda_backward(torch::Tensor features, torch::Tensor simila
     auto grad_matrix = torch::empty({batch_size, batch_size}, torch::TensorOptions().dtype(torch::kFloat).device(features.device()));
     
     //Calculate gradient matrix using pre-computed max_vals and sum_exps
-    const int threads_backward = calculate_optimal_block_size_1d(batch_size);
-    const int blocks_backward = calculate_grid_size_1d(batch_size, threads_backward);
+    const int threads_backward = calculate_optimal_block_size_1d(batch_size * batch_size);
+    const int blocks_backward = calculate_grid_size_1d(batch_size * batch_size, threads_backward);
     
     infonce_backward_kernel<<<blocks_backward, threads_backward>>>(
         similarity_matrix.data_ptr<float>(),
@@ -359,7 +364,10 @@ torch::Tensor infonce_cuda_backward(torch::Tensor features, torch::Tensor simila
         dim3 block_grad = calculate_optimal_block_size_2d(batch_size, feature_dim);
         dim3 grid_grad = calculate_grid_size_2d(batch_size, feature_dim, block_grad);
         
-        features_gradient_kernel<<<grid_grad, block_grad>>>(
+        // Calculate shared memory size: features cache + gradients cache
+        size_t shared_memory_size = (block_grad.y * feature_dim + block_grad.x * block_grad.y) * sizeof(float);
+        
+        features_gradient_kernel<<<grid_grad, block_grad, shared_memory_size>>>(
             grad_matrix.data_ptr<float>(),
             features.data_ptr<float>(),
             grad_features.data_ptr<float>(),
