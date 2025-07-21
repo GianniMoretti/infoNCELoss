@@ -1,51 +1,51 @@
 # CuBlaze: InfoNCE Loss CUDA Implementation
 
-**CuBlaze** è un'implementazione CUDA di **InfoNCE Loss** (Information Noise-Contrastive Estimation) per self-supervised contrastive learning. Questa implementazione offre elaborazione batch completa con integrazione nativa di PyTorch autograd e supporto per multiple implementazioni ottimizzate.
+**CuBlaze** is a CUDA implementation of **InfoNCE Loss** (Information Noise-Contrastive Estimation) for self-supervised contrastive learning. This implementation offers complete batch processing with native PyTorch autograd integration and support for multiple optimized implementations.
 
 ## What is InfoNCE Loss?
 
-InfoNCE Loss è una funzione di perdita fondamentale nel contrastive learning che massimizza l'accordo tra coppie positive di esempi e minimizza l'accordo con esempi negativi. La formula matematica è:
+InfoNCE Loss is a fundamental loss function in contrastive learning that maximizes agreement between positive pairs of examples and minimizes agreement with negative examples. The mathematical formula is:
 
 ```
 InfoNCE = -1/N Σᵢ log(exp(sim(zᵢ, z_p(i))/τ) / Σⱼ exp(sim(zᵢ, zⱼ)/τ))
 ```
 
-Dove:
-- `N = 2*batch_size` è il numero totale di esempi 
-- `zᵢ, zⱼ` sono embedding normalizzati L2
-- `p(i) = (i + batch_size) % N` identifica la coppia positiva
-- `sim(a,b) = a·b` è la similarità coseno (dot product per vettori normalizzati)
-- `τ` è il parametro temperatura
+Where:
+- `N = 2*batch_size` is the total number of examples 
+- `zᵢ, zⱼ` are L2 normalized embeddings
+- `p(i) = (i + batch_size) % N` identifies the positive pair
+- `sim(a,b) = a·b` is cosine similarity (dot product for normalized vectors)
+- `τ` is the temperature parameter
 
 ## Implementation Features
 
-✅ **Dual Implementation**: Supporta sia kernels CUDA custom che operazioni CUBLAS ottimizzate  
-✅ **Complete Batch Processing**: Elabora matrici di feature (2*batch_size, feature_dim)  
-✅ **Native Autograd**: Integrazione completa con backward pass di PyTorch  
-✅ **Numerical Stability**: Calcoli numericamente stabili anche con temperature basse  
-✅ **GPU Optimized**: Kernels CUDA personalizzati
-✅ **SimCLR Compatibility**: Design specifico per framework di contrastive learning  
-✅ **Flexible Backend**: Scegli tra implementazione custom CUDA o CUBLAS  
+✅ **Dual Implementation**: Supports both custom CUDA kernels and optimized CUBLAS operations  
+✅ **Complete Batch Processing**: Processes feature matrices (2*batch_size, feature_dim)  
+✅ **Native Autograd**: Complete integration with PyTorch backward pass  
+✅ **Numerical Stability**: Numerically stable computations even with low temperatures  
+✅ **GPU Optimized**: Custom CUDA kernels
+✅ **SimCLR Compatibility**: Specific design for contrastive learning frameworks  
+✅ **Flexible Backend**: Choose between custom CUDA implementation or CUBLAS  
 
 ## Project Structure
 
 ```
 CuBlaze/
 ├── cublaze/
-│   ├── __init__.py                   # Export principali
-│   ├── infonce.py                    # Implementazione Python/autograd
+│   ├── __init__.py                   # Main exports
+│   ├── infonce.py                    # Python/autograd implementation
 │   └── cuda/
-│       ├── infonce_cuda.cu           # Kernels CUDA ottimizzati
-│       └── infonce_cuda_wrapp.cpp    # Wrapper PyBind11
-├── setup.py                         # Configurazione build
-├── pyproject.toml                   # Configurazione packaging moderno
-├── build_and_test.sh               # Script automatico build+test
-├── test_implementation.py          # Test correttezza e performance
-├── performance.py                  # Analisi benchmark avanzata
-├── reports/                        # Documentazione tecnica completa
-├── documentation/                  # Documentazione LaTeX
-├── images/                        # Grafici e visualizzazioni
-└── README.md                      # Questa documentazione
+│       ├── infonce_cuda.cu           # Optimized CUDA kernels
+│       └── infonce_cuda_wrapp.cpp    # PyBind11 wrapper
+├── setup.py                         # Build configuration
+├── pyproject.toml                   # Modern packaging configuration
+├── build_and_test.sh               # Automatic build+test script
+├── test_implementation.py          # Correctness and performance tests
+├── performance.py                  # Advanced benchmark analysis
+├── reports/                        # Complete technical documentation
+├── documentation/                  # LaTeX documentation
+├── images/                        # Graphs and visualizations
+└── README.md                      # This documentation
 ```
 
 ## Installation
@@ -131,11 +131,11 @@ loss.backward()
 ### Backend Selection Guide
 
 **Custom CUDA Kernels** (`use_cublas=False`, default):
-- ✅ Più veloce per batch grandi
-- ✅ Controllo completo su ottimizzazioni
+- ✅ Faster for large batches
+- ✅ Complete control over optimizations
 
 **CUBLAS Operations** (`use_cublas=True`):
-- ✅ Più stabile su hardware diverso
+- ✅ More stable across different hardware
 - ✅ Leverages highly optimized BLAS
 
 ### Comparison with Vanilla PyTorch
@@ -244,12 +244,12 @@ python performance.py
 
 ### Test Coverage
 
-Il script di test verifica:
-- ✅ **Numerical correctness**: Confronto con implementazione PyTorch di riferimento
-- ✅ **Both backends**: Test sia custom CUDA che CUBLAS
-- ✅ **Gradient accuracy**: Verifica backward pass accurato
-- ✅ **Performance benchmarks**: Tempi di esecuzione per entrambi i backend
-- ✅ **Error tolerance**: Verifica precisione numerica
+The test script verifies:
+- ✅ **Numerical correctness**: Comparison with PyTorch reference implementation
+- ✅ **Both backends**: Tests both custom CUDA and CUBLAS
+- ✅ **Gradient accuracy**: Verifies accurate backward pass
+- ✅ **Performance benchmarks**: Execution times for both backends
+- ✅ **Error tolerance**: Verifies numerical precision
 
 ### Performance Analysis
 
@@ -258,19 +258,19 @@ Il script di test verifica:
 python performance.py
 ```
 
-Genera:
-- 📊 Grafici di confronto velocità
-- 📈 Analisi scalabilità batch size
-- 🔍 Analisi accuratezza numerica
+Generates:
+- 📊 Speed comparison charts
+- 📈 Batch size scalability analysis
+- 🔍 Numerical accuracy analysis
 
 ### Generated Reports
 
-Dopo aver eseguito `performance.py`, troverai in `/images/`:
-- `execution_times.png`: Confronto tempi esecuzione
-- `speedup_comparison.png`: Analisi speedup per backend
-- `gradient_error.png`: Accuratezza gradienti
-- `loss_error.png`: Errori di loss
-- `performance_overview.png`: Overview completo prestazioni
+After running `performance.py`, you'll find in `/images/`:
+- `execution_times.png`: Execution time comparison
+- `speedup_comparison.png`: Speedup analysis for backends
+- `gradient_error.png`: Gradient accuracy
+- `loss_error.png`: Loss errors
+- `performance_overview.png`: Complete performance overview
 
 ## References
 
